@@ -1,125 +1,123 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search, Menu, X, User, ShoppingCart } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Menu, X, User, ShoppingCart, Heart } from "lucide-react";
+import Link from "next/link";
+import AnnouncementBar from "./layout/AnnouncementBar";
 import SearchModal from "./Modals/SearchModal";
-// import SearchModal from "./SearchModal";
+import CartDrawer from "./cart/CartDrawer";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Navbar() {
-  const [active, setActive] = useState("home");
-  const [openSearch, setOpenSearch] = useState<boolean>(false);
-  const [openMenu, setOpenMenu] = useState<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [openSearch, setOpenSearch] = useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
+  const [openCart, setOpenCart] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "All Products", href: "/products" },
+    { name: "Catalog", href: "/catalog" },
+    { name: "Contact", href: "/contact" },
+  ];
 
   return (
-    <>
-      {/* NAVBAR */}
-      <nav className="absolute top-0 left-0 w-full z-50 text-white">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-5">
+    <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg" : "bg-transparent linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)"}`}>
+      <AnnouncementBar />
 
-          {/* Logo */}
-          {/* Mobile Hamburger */}
-          <button
-            className="md:hidden "
-            onClick={() => setOpenMenu(true)}
-          >
-            <Menu className="w-7 h-7" />
+      <div className="max-w-[1920px] mx-auto px-10 py-6 flex justify-between items-center relative gap-8">
+
+        {/* Mobile Menu Trigger & Left Nav (Desktop) */}
+        <div className="flex items-center gap-12 flex-1">
+          <button className="lg:hidden text-white" onClick={() => setOpenMenu(true)}>
+            <Menu className="w-6 h-6" />
           </button>
-          <h1 className="text-xl font-bold tracking-wide  ">
-            Your<span className="text-red-600">Anime</span>Hub
-          </h1>
 
-          {/* Desktop Menu */}
-          <ul className="hidden md:flex gap-8 font-medium">
-            <li className="relative cursor-pointer hover:text-red-500
-  after:absolute after:left-0 after:-bottom-1
-  after:h-[2px] after:w-0 after:bg-red-500
-  after:transition-all after:duration-200
-  hover:after:w-full
-"
-onClick={() => setActive("home")}>
+          <nav className="hidden lg:flex gap-10">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="text-sm font-bold uppercase tracking-widest text-white/90 hover:text-primary transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-              Home
-            </li>
+        {/* Center Logo - Animated */}
+        <div className="flex-none flex justify-center">
+          <Link href="/" className="group relative">
+            <div className="flex items-center gap-1">
+              <span className="text-3xl md:text-4xl font-black tracking-tighter text-white uppercase font-display group-hover:text-gray-200 transition-colors">
+                Your
+              </span>
+              <span className="text-3xl md:text-4xl font-black tracking-tighter text-primary uppercase font-display animate-pulse">
+                Anime
+              </span>
+              <span className="text-3xl md:text-4xl font-black tracking-tighter text-white uppercase font-display group-hover:text-gray-200 transition-colors">
+                Hub
+              </span>
+            </div>
+          </Link>
+        </div>
 
-            <li className="relative cursor-pointer hover:text-red-500
-  after:absolute after:left-0 after:-bottom-1
-  after:h-[2px] after:w-0 after:bg-red-500
-  after:transition-all after:duration-200
-  hover:after:w-full
-"
-onClick={() => setActive("all-products")} 
->All Products</li>
-            <li className="relative cursor-pointer hover:text-red-500
-  after:absolute after:left-0 after:-bottom-1
-  after:h-[2px] after:w-0 after:bg-red-500
-  after:transition-all after:duration-200
-  hover:after:w-full
-"
-onClick={() => setActive("catalog")} 
->Catalog</li>
-            <li className="relative cursor-pointer hover:text-red-500
-  after:absolute after:left-0 after:-bottom-1
-  after:h-[2px] after:w-0 after:bg-red-500
-  after:transition-all after:duration-200
-  hover:after:w-full
-"
-onClick={() => setActive("contact")} 
->Contact</li>
-            <li className="relative cursor-pointer hover:text-red-500
-  after:absolute after:left-0 after:-bottom-1
-  after:h-[2px] after:w-0 after:bg-red-500
-  after:transition-all after:duration-200
-  hover:after:w-full
-"
-onClick={() => setActive("about-us")} 
->About Us</li>
+        {/* Right Icons */}
+        <div className="flex items-center justify-end gap-8 flex-1 text-white">
+          <button onClick={() => setOpenSearch(true)} className="hover:text-primary transition-colors transform hover:scale-110 duration-200">
+            <Search className="w-5 h-5" />
+          </button>
+          <Link href={isAuthenticated ? "/account/dashboard" : "/auth/login"} className="hidden md:block hover:text-primary transition-colors transform hover:scale-110 duration-200">
+            <User className="w-5 h-5" />
+          </Link>
+          <Link href="/wishlist" className="hidden md:block hover:text-primary transition-colors transform hover:scale-110 duration-200">
+            <Heart className="w-5 h-5" />
+          </Link>
+          <button onClick={() => setOpenCart(true)} className="relative hover:text-primary transition-colors transform hover:scale-110 duration-200">
+            <ShoppingCart className="w-5 h-5" />
+            <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">0</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={openCart} onClose={() => setOpenCart(false)} />
+
+      {/* Mobile Menu Overlay */}
+      <div className={`fixed inset-0 bg-black/90 z-[100] transition-transform duration-300 ${openMenu ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="flex flex-col h-full bg-secondary w-[85%] sm:w-[50%] p-8">
+          <button onClick={() => setOpenMenu(false)} className="self-end mb-8 text-white">
+            <X className="w-8 h-8" />
+          </button>
+
+          <ul className="flex flex-col gap-6">
+            {navLinks.map((link) => (
+              <li key={link.name}>
+                <Link
+                  href={link.href}
+                  className="text-2xl font-black uppercase text-white hover:text-primary tracking-wider"
+                  onClick={() => setOpenMenu(false)}
+                >
+                  {link.name}
+                </Link>
+              </li>
+            ))}
           </ul>
-
-          {/* Icons */}
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <button onClick={() => setOpenSearch(true)}>
-              <Search className="w-6 h-6" />
-            </button>
-            <button>
-              <User className="w-6 h-6" />
-            </button>
-            <button>
-              <ShoppingCart className="w-6 h-6" />
-            </button>
-
-
-          </div>
         </div>
-      </nav>
+      </div>
 
-      {/* ✅ Mobile Menu Drawer */}
-      {openMenu && (
-        <div className="fixed inset-0  bg-black/70 z-[999]">
-          <div className="bg-black w-[80%] h-full p-6">
-
-            {/* Close Button */}
-            <button
-              className="mb-6"
-              onClick={() => setOpenMenu(false)}
-            >
-              <X className="text-black w-7 h-7" />
-            </button>
-
-            {/* Mobile Links */}
-            <ul className="flex flex-col gap-6 text-lg font-semibold text-white">
-              <li className="hover:text-red-500 cursor-pointer">Home</li>
-              <li className="hover:text-red-500 cursor-pointer">All Products</li>
-              <li className="hover:text-red-500 cursor-pointer">Catalog</li>
-              <li className="hover:text-red-500 cursor-pointer">Contact</li>
-              <li className="hover:text-red-500 cursor-pointer">About Us</li>
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* Search Modal */}
       {openSearch && <SearchModal close={() => setOpenSearch(false)} />}
-    </>
+    </header>
   );
 }
