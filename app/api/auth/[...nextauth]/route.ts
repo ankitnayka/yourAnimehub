@@ -3,9 +3,6 @@ import GoogleProvider from "next-auth/providers/google";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 
-console.log("GOOGLE_CLIENT_ID Loaded:", process.env.GOOGLE_CLIENT_ID?.substring(0, 10) + "...");
-console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-
 export const authOptions: AuthOptions = {
     providers: [
         GoogleProvider({
