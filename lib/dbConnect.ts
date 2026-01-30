@@ -30,6 +30,10 @@ async function dbConnect() {
         };
 
         cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+            // Run bootstrap in background
+            import('./bootstrap').then(({ bootstrapSuperAdmin }) => {
+                bootstrapSuperAdmin();
+            });
             return mongoose;
         });
     }

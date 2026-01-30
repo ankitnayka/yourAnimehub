@@ -54,6 +54,15 @@ export async function POST(req: Request) {
             path: '/',
         });
 
+        // Set Access Token Cookie for Middleware
+        cookieStore.set('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60, // 15 minutes
+            path: '/',
+        });
+
         return NextResponse.json({
             message: 'Login successful',
             accessToken,
@@ -62,6 +71,7 @@ export async function POST(req: Request) {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                permissions: user.permissions || [],
                 image: user.image,
             },
         });

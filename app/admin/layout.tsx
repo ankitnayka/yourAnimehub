@@ -10,20 +10,38 @@ import {
     Users,
     Settings,
     Menu,
-    X
+    X,
+    LogOut
 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { ADMIN_SIDEBAR_CONFIG } from "@/config/admin";
+import { PERMISSIONS } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
 
-    const navItems = [
-        { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { name: "Products", href: "/admin/products", icon: Package },
-        { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
-        { name: "Customers", href: "/admin/customers", icon: Users },
-        { name: "Settings", href: "/admin/settings", icon: Settings },
-    ];
+    const { user } = useAuthStore();
+    const router = useRouter();
+
+    const navItems = ADMIN_SIDEBAR_CONFIG.filter(item => {
+        // Always show everything if user is loading (or null). 
+        // Logic: Better to show a button that errors 403 than to hide the entire UI while loading.
+        if (!user) return true;
+
+        if (user.role === 'super-admin') return true;
+
+        if (user.role === 'admin') {
+            return item.requiredPermission !== PERMISSIONS.MANAGE_ADMINS;
+        }
+
+        if (user.role === 'sub-admin') {
+            if (!item.requiredPermission) return true;
+            return user.permissions?.includes(item.requiredPermission);
+        }
+        return false;
+    });
 
     return (
         <div className="min-h-screen bg-black text-white flex">
@@ -37,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Sidebar */}
             <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#111] border-r border-[#222] transform transition-transform duration-200 ease-in-out
+        fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-64 bg-[#111] border-r border-[#222] transform transition-transform duration-200 ease-in-out flex flex-col h-screen
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
                 <div className="h-16 flex items-center px-6 border-b border-[#222]">
@@ -52,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </button>
                 </div>
 
-                <nav className="p-4 space-y-2">
+                <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
@@ -60,8 +78,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition-colors ${isActive
-                                        ? "bg-primary text-white"
-                                        : "text-gray-400 hover:bg-[#222] hover:text-white"
+                                    ? "bg-primary text-white"
+                                    : "text-gray-400 hover:bg-[#222] hover:text-white"
                                     }`}
                                 onClick={() => setSidebarOpen(false)}
                             >
@@ -71,6 +89,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         )
                     })}
                 </nav>
+
+                <div className="p-4 border-t border-[#222]">
+                    <button
+                        onClick={async () => {
+                            await useAuthStore.getState().logout();
+                            router.push('/admin/login');
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wide text-gray-400 hover:bg-red-900/20 hover:text-red-500 transition-colors w-full"
+                    >
+                        <LogOut size={18} />
+                        Sign Out
+                    </button>
+                    {user && (
+                        <div className="mt-4 px-4 flex items-center gap-3 text-xs text-gray-500">
+                            <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center font-bold text-gray-300">
+                                {user.name?.[0] || 'A'}
+                            </div>
+                            <div className="overflow-hidden">
+                                <p className="font-bold text-gray-300 truncate">{user.name}</p>
+                                <p className="truncate">{user.role}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </aside>
 
             {/* Main Content */}

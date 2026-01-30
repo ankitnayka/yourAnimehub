@@ -27,12 +27,26 @@ export async function POST(req: Request) {
             path: '/',
         });
 
+        // Also clear accessToken
+        cookieStore.set('accessToken', '', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            expires: new Date(0),
+            path: '/',
+        });
+
         return NextResponse.json({ message: 'Logged out successfully' });
     } catch (error) {
         console.error('Logout error:', error);
         // Even if error, we should clear the cookie
         const cookieStore = await cookies();
         cookieStore.set('refreshToken', '', {
+            httpOnly: true,
+            expires: new Date(0),
+            path: '/',
+        });
+        cookieStore.set('accessToken', '', {
             httpOnly: true,
             expires: new Date(0),
             path: '/',

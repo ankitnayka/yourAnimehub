@@ -60,9 +60,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </Link>
 
                 {/* Quick Action Overlay */}
-                <div className={`absolute bottom-0 left-0 right-0 p-4 translate-y-full transition-transform duration-300 ease-out z-20 ${isHovered ? 'translate-y-0' : ''}`}>
-                    <button className="w-full bg-white text-black font-bold uppercase tracking-widest py-3 text-xs hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
+                <div className={`absolute bottom-0 left-0 right-0 p-4 translate-y-full transition-transform duration-300 ease-out z-20 flex flex-col gap-2 ${isHovered ? 'translate-y-0' : ''}`}>
+                    <button className="w-full bg-white text-black font-bold uppercase tracking-widest py-3 text-[10px] hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
                         <ShoppingCart size={14} /> Add To Cart
+                    </button>
+                    <button className="w-full bg-primary text-white font-bold uppercase tracking-widest py-3 text-[10px] hover:bg-white hover:text-black transition-colors flex items-center justify-center gap-2">
+                        Buy Now
                     </button>
                 </div>
             </div>

@@ -7,11 +7,12 @@ import Link from 'next/link';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { signIn } from 'next-auth/react';
 import axios from 'axios';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const { login } = useAuthStore();
@@ -27,7 +28,13 @@ export default function LoginPage() {
             const { user, accessToken } = response.data;
 
             login(user, accessToken);
-            router.push('/admin'); // Or dashboard, depending on role. Ideally redirect to 'from' or account.
+
+            // Role-based redirection
+            if (['admin', 'super-admin', 'sub-admin'].includes(user.role)) {
+                router.push('/admin');
+            } else {
+                router.push('/');
+            }
         } catch (err: any) {
             setError(err.response?.data?.error || 'Something went wrong');
         } finally {
@@ -62,14 +69,23 @@ export default function LoginPage() {
 
                 <div>
                     <label className="block text-sm font-medium text-neutral-400 mb-1">Password</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
-                        placeholder="••••••••"
-                        required
-                    />
+                    <div className="relative">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors pr-10"
+                            placeholder="••••••••"
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
                 </div>
 
                 <button

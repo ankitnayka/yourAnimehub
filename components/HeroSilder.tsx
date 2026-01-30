@@ -3,63 +3,89 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
-const slides = [
-  {
-    id: 1,
-    title: "DARKER THE DRIP",
-    subtitle: "LOUDER THE VIBE",
-    description: "Experience the chaos of premium streetwear designed for the bold.",
-    image: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
-    cta: "Shop The Collection",
-    link: "/products"
-  },
-  {
-    id: 2,
-    title: "UNLEASH YOUR",
-    subtitle: "URBAN LEGEND",
-    description: "Dominate the streets with our exclusive anime-inspired drops.",
-    image: "https://images.pexels.com/photos/845434/pexels-photo-845434.jpeg",
-    cta: "View Catalog",
-    link: "/catalog"
-  },
-  {
-    id: 3,
-    title: "ELEVATE YOUR",
-    subtitle: "AESTHETIC",
-    description: "Where anime meets high fashion. Don't just watch it, wear it.",
-    image: "https://p325k7wa.twic.pics/high/my-hero-academia/my-hero-ultra-rumble/00-page-setup/MHUR-new-header-mobile.jpg?twic=v1/resize=760/step=10/quality=80",
-    cta: "Explore Now",
-    link: "/products"
-  }
-];
+interface Slide {
+  _id: string;
+  id?: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  type: 'image' | 'video';
+  mediaUrl: string;
+  cta: string;
+  link: string;
+}
 
 export default function HeroSlider() {
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [current, setCurrent] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const res = await fetch("/api/hero-slides");
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setSlides(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch hero slides", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSlides();
+  }, []);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 7000); // Slightly longer for video appreciation
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
+
+  if (loading) {
+    return (
+      <section className="relative w-full h-[90vh] bg-black flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={48} />
+      </section>
+    );
+  }
+
+  if (slides.length === 0) {
+    return null; // Don't show anything if no slides are found
+  }
 
   return (
     <section className="relative w-full h-[90vh] overflow-hidden bg-black text-white">
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
-          initial={{ opacity: 0, scale: 1.1 }}
+          initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 1, ease: "easeOut" }}
           className="absolute inset-0"
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${slides[current].image})` }}
-          />
+          {slides[current].type === 'image' ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${slides[current].mediaUrl})` }}
+            />
+          ) : (
+            <video
+              src={slides[current].mediaUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-black/50" /> {/* Overlay */}
         </motion.div>
       </AnimatePresence>
@@ -111,17 +137,18 @@ export default function HeroSlider() {
         </AnimatePresence>
       </div>
 
-      {/* Progress Indicators */}
-      <div className="absolute bottom-10 left-6 md:left-20 flex gap-3 z-20">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            className={`h-1 transition-all duration-500 ${index === current ? "w-12 bg-primary" : "w-6 bg-white/50"
-              }`}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-10 left-6 md:left-20 flex gap-3 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrent(index)}
+              className={`h-1 transition-all duration-500 ${index === current ? "w-12 bg-primary" : "w-6 bg-white/50"
+                }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

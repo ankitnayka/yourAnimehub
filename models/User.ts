@@ -20,9 +20,12 @@ const UserSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
+        enum: ['user', 'admin', 'super-admin', 'sub-admin'],
         default: 'user',
     },
+    permissions: [{
+        type: String, // e.g., 'manage_products', 'manage_orders', 'view_analytics'
+    }],
     provider: {
         type: String,
         enum: ['google', 'credentials'],

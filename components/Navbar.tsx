@@ -23,12 +23,32 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
+  const [navLinks, setNavLinks] = useState([
     { name: "Home", href: "/" },
     { name: "All Products", href: "/products" },
     { name: "Catalog", href: "/catalog" },
     { name: "Contact", href: "/contact" },
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchNavItems = async () => {
+      try {
+        const res = await fetch('/api/navbar');
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          const mappedLinks = data.data.map((item: any) => ({
+            name: item.label,
+            href: item.path,
+          }));
+          setNavLinks(mappedLinks);
+        }
+      } catch (error) {
+        console.error("Failed to fetch navbar items", error);
+      }
+    };
+
+    fetchNavItems();
+  }, []);
 
   return (
     <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg" : "bg-transparent linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)"}`}>
@@ -96,24 +116,58 @@ export default function Navbar() {
 
       {/* Mobile Menu Overlay */}
       <div className={`fixed inset-0 bg-black/90 z-[100] transition-transform duration-300 ${openMenu ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex flex-col h-full bg-secondary w-[85%] sm:w-[50%] p-8">
-          <button onClick={() => setOpenMenu(false)} className="self-end mb-8 text-white">
+        <div className="flex flex-col h-full bg-secondary w-[85%] sm:w-[50%] p-8 relative">
+          <button onClick={() => setOpenMenu(false)} className="absolute top-6 right-6 text-white p-2">
             <X className="w-8 h-8" />
           </button>
 
-          <ul className="flex flex-col gap-6">
-            {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  href={link.href}
-                  className="text-2xl font-black uppercase text-white hover:text-primary tracking-wider"
-                  onClick={() => setOpenMenu(false)}
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-12 flex flex-col h-full">
+            {/* Nav Links */}
+            <ul className="flex flex-col gap-6 mb-8">
+              {navLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-2xl font-black uppercase text-white hover:text-primary tracking-wider"
+                    onClick={() => setOpenMenu(false)}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-auto border-t border-white/10 pt-8 flex flex-col gap-4">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/account/dashboard"
+                    onClick={() => setOpenMenu(false)}
+                    className="w-full bg-neutral-800 text-white text-center py-4 rounded-lg font-bold uppercase tracking-widest border border-white/10"
+                  >
+                    My Account
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setOpenMenu(false)}
+                    className="w-full bg-white text-black text-center py-4 rounded-lg font-bold uppercase tracking-widest"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setOpenMenu(false)}
+                    className="w-full bg-transparent text-white border border-white/20 text-center py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-white/5"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

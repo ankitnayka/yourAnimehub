@@ -1,59 +1,52 @@
 "use client";
 
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import HeroSlider from "@/components/HeroSilder";
-// Direct import of ProductCard to avoid circular/missing export issues from ProductGrid
 import ProductCard from "@/components/product/ProductCard";
 import CategorySidebar from "@/components/home/CategorySidebar";
+import CategoryGrid from "@/components/home/CategoryGrid";
 import { Product } from "@/types/product";
 
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "Alpha Drip Unisex Sweatshirt - Earth Brown",
-    price: 899,
-    originalPrice: 1999,
-    image: "https://trenzicwear.com/cdn/shop/files/IMG_0488.jpg?v=1729687989&width=360",
-    hoverImage: "https://trenzicwear.com/cdn/shop/files/IMG_0489.jpg?v=1729687989&width=360",
-    slug: "alpha-drip-sweatshirt",
-    category: "Sweatshirt",
-    badges: ["Best Seller"]
-  },
-  {
-    id: "2",
-    name: "Midnight Black Oversized Tee",
-    price: 599,
-    originalPrice: 1299,
-    image: "https://trenzicwear.com/cdn/shop/files/IMG_0461.jpg?v=1729687798&width=360",
-    hoverImage: "https://trenzicwear.com/cdn/shop/files/IMG_0464.jpg?v=1729687798&width=360",
-    slug: "midnight-black-tee",
-    category: "T-Shirt",
-    badges: ["New Arrival"]
-  },
-  {
-    id: "3",
-    name: "Urban Frost Hoodie - Steel Navy",
-    price: 1999,
-    originalPrice: 3499,
-    image: "https://trenzicwear.com/cdn/shop/files/IMG_0531.jpg?v=1729688126&width=360",
-    hoverImage: "https://trenzicwear.com/cdn/shop/files/IMG_0533.jpg?v=1729688126&width=360",
-    slug: "urban-frost-hoodie",
-    category: "Hoodie",
-    badges: ["Sale"]
-  },
-  {
-    id: "4",
-    name: "Chaos Theory bomber Jacket",
-    price: 2499,
-    originalPrice: 4999,
-    image: "https://trenzicwear.com/cdn/shop/files/IMG_0428.jpg?v=1729687586&width=360",
-    hoverImage: "https://trenzicwear.com/cdn/shop/files/IMG_0430.jpg?v=1729687586&width=360",
-    slug: "chaos-theory-bomber",
-    category: "Jacket",
-    badges: []
-  }
-];
+function HomeContent() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const selectedCategory = searchParams.get("category") || "All Products";
 
-export default function Home() {
+  const setSelectedCategory = (cat: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (cat === "All Products") {
+      params.delete("category");
+    } else {
+      params.set("category", cat);
+    }
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const url = selectedCategory === "All Products"
+          ? "/api/products"
+          : `/api/products?category=${encodeURIComponent(selectedCategory)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.success) {
+          setProducts(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [selectedCategory]);
+
   return (
     <div className="flex flex-col gap-0 bg-black min-h-screen">
       {/* 1. Hero Section (Only One) */}
@@ -61,27 +54,55 @@ export default function Home() {
         <HeroSlider />
       </div>
 
+      {/* 2. Visual Category Grid */}
+      <CategoryGrid />
+
       {/* 2. Main Content Area (Sidebar + Grid) */}
-      <section className="max-w-[1920px] mx-auto px-6 py-12 md:py-20 flex flex-col md:flex-row gap-8">
+      <section id="products" className="w-full max-w-[1920px] mx-auto px-6 py-12 md:py-20 flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
-        <CategorySidebar />
+        <CategorySidebar
+          onCategoryChange={setSelectedCategory}
+          activeCategory={selectedCategory}
+        />
 
         {/* Product Feed */}
-        <div className="flex-1">
+        <div className="flex-1 min-h-screen">
           <h2 className="text-3xl font-black uppercase text-white mb-8 flex items-center gap-4">
-            Trending <span className="text-primary">Now</span>
+            {selectedCategory === "All Products" ? "Trending" : selectedCategory} <span className="text-primary">{selectedCategory === "All Products" ? "Now" : ""}</span>
             <span className="h-1 flex-1 bg-white/10 rounded-full"></span>
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-6">
-            {mockProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-            {mockProducts.map((product) => (
-              <ProductCard key={product.id + '_dup'} product={product} /> // Duplicated for demo fullness
-            ))}
-          </div>
+
+          {loading ? (
+            <div className="text-white">Loading products...</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-6">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+
+          {!loading && products.length === 0 && (
+            <div className="text-center py-20 bg-white/5 border border-white/10 rounded-xl mt-8">
+              <p className="text-gray-400 text-lg uppercase font-black tracking-tighter italic">No products found in this category</p>
+              <button
+                onClick={() => setSelectedCategory("All Products")}
+                className="mt-4 text-primary font-bold uppercase tracking-widest text-xs hover:underline"
+              >
+                View all collections
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="bg-black min-h-screen text-white flex items-center justify-center">Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
