@@ -34,6 +34,14 @@ const UserSchema = new Schema({
     wishlist: [{
         type: String, // Storing Product IDs or Slugs
     }],
+    cart: [{
+        id: String,
+        name: String,
+        price: Number,
+        image: String,
+        quantity: { type: Number, default: 1 },
+        slug: String,
+    }],
     addresses: [{
         street: String,
         city: String,

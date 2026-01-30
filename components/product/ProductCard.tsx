@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingCart, Eye } from "lucide-react";
+import { useCartStore } from "@/store/useCartStore";
 import { Product } from "@/types/product";
 
 interface ProductCardProps {
@@ -12,15 +12,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const addItem = useCartStore((state) => state.addItem);
 
     // Calculate discount percentage
     const discount = product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
         : 0;
 
+    const isOutOfStock = product.status === "Out of Stock" || (product.stock !== undefined && product.stock <= 0);
+
     return (
         <motion.div
-            className="group relative flex flex-col"
+            className="group relative flex flex-col bg-white border border-gray-100 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -29,56 +32,78 @@ export default function ProductCard({ product }: ProductCardProps) {
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Image Container */}
-            <div className="relative aspect-[3/4] overflow-hidden bg-secondary rounded-sm mb-4">
-                {/* Badges */}
-                <div className="absolute top-2 left-2 z-20 flex flex-col gap-2">
-                    {discount > 0 && (
-                        <span className="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
-                            -{discount}%
-                        </span>
-                    )}
-                    {product.badges?.map((badge, idx) => (
-                        <span key={idx} className="bg-white text-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
-                            {badge}
-                        </span>
-                    ))}
-                </div>
-
+            <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
                 <Link href={`/product/${product.slug}`} className="block w-full h-full">
                     <img
                         src={product.image}
                         alt={product.name}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isHovered && product.hoverImage ? 'opacity-0' : 'opacity-100'}`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out ${isHovered ? 'scale-110' : 'scale-100'}`}
                     />
                     {product.hoverImage && (
                         <img
                             src={product.hoverImage}
                             alt={product.name}
-                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                         />
                     )}
                 </Link>
 
-                {/* Quick Action Overlay */}
-                <div className={`absolute bottom-0 left-0 right-0 p-4 translate-y-full transition-transform duration-300 ease-out z-20 flex flex-col gap-2 ${isHovered ? 'translate-y-0' : ''}`}>
-                    <button className="w-full bg-white text-black font-bold uppercase tracking-widest py-3 text-[10px] hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
-                        <ShoppingCart size={14} /> Add To Cart
-                    </button>
-                    <button className="w-full bg-primary text-white font-bold uppercase tracking-widest py-3 text-[10px] hover:bg-white hover:text-black transition-colors flex items-center justify-center gap-2">
-                        Buy Now
-                    </button>
+                {/* Badges on Image */}
+                <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                    {product.isFeatured && (
+                        <span className="bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded-sm">
+                            Featured
+                        </span>
+                    )}
+                    {product.isNewArrival && (
+                        <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded-sm">
+                            New Arrival
+                        </span>
+                    )}
+                    {product.badges && product.badges.length > 0 && product.badges.map((badge, idx) => (
+                        <span key={idx} className="bg-black/80 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded-sm">
+                            {badge}
+                        </span>
+                    ))}
                 </div>
             </div>
 
             {/* Product Details */}
-            <div className="flex flex-col gap-1">
-                <h3 className="text-sm font-bold uppercase tracking-wide text-white truncate max-w-full">
-                    <Link href={`/product/${product.slug}`}>{product.name}</Link>
+            <div className="p-3 flex flex-col gap-2">
+                <h3 className="text-[13px] font-medium text-gray-800 line-clamp-2 min-h-[40px] leading-snug">
+                    <Link href={`/product/${product.slug}`} className="hover:text-primary transition-colors">{product.name}</Link>
                 </h3>
-                <div className="flex items-center gap-2">
-                    <span className="text-primary font-bold">₹{product.price.toLocaleString()}</span>
-                    {product.originalPrice && (
-                        <span className="text-muted text-xs line-through">₹{product.originalPrice.toLocaleString()}</span>
+
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[#B22222] font-bold text-base">₹{product.price.toLocaleString()}</span>
+                        {product.originalPrice && (
+                            <span className="text-gray-400 text-xs line-through">₹{product.originalPrice.toLocaleString()}</span>
+                        )}
+                    </div>
+                    {discount > 0 && (
+                        <span className="bg-[#FF4D4D] text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase">
+                            -{discount}% OFF
+                        </span>
+                    )}
+                </div>
+
+                {/* Action Button */}
+                <div className="mt-1">
+                    {isOutOfStock ? (
+                        <button
+                            disabled
+                            className="w-full bg-[#EAEAEA] text-[#A0A0A0] font-bold uppercase tracking-wider py-2.5 text-[11px] rounded-md cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            SOLD OUT
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => addItem(product)}
+                            className="w-full bg-gradient-to-r from-[#4A0E0E] to-[#B22222] text-white font-bold uppercase tracking-wider py-2.5 text-[11px] rounded-md transition-all duration-300 hover:from-[#3A0B0B] hover:to-[#8B1A1A] hover:shadow-lg flex items-center justify-center gap-2"
+                        >
+                            ADD TO CART
+                        </button>
                     )}
                 </div>
             </div>

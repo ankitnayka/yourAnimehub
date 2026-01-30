@@ -7,13 +7,23 @@ import AnnouncementBar from "./layout/AnnouncementBar";
 import SearchModal from "./Modals/SearchModal";
 import CartDrawer from "./cart/CartDrawer";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useCartStore } from "@/store/useCartStore";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [openSearch, setOpenSearch] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
-  const [openCart, setOpenCart] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  // Using store for cart state
+  const { items, isOpen: openCart, setIsOpen: setOpenCart, fetchCart } = useCartStore();
+  const { isAuthenticated, accessToken } = useAuthStore();
+
+  const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
+
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      fetchCart(accessToken);
+    }
+  }, [isAuthenticated, accessToken]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -106,7 +116,11 @@ export default function Navbar() {
           </Link>
           <button onClick={() => setOpenCart(true)} className="relative hover:text-primary transition-colors transform hover:scale-110 duration-200">
             <ShoppingCart className="w-5 h-5" />
-            <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">0</span>
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-in zoom-in duration-300">
+                {cartItemCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

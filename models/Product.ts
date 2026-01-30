@@ -13,10 +13,11 @@ const ProductSchema = new mongoose.Schema({
     },
     price: {
         type: Number,
-        required: [true, "Please provide a price for this product."],
+        required: [true, "Please provide a selling price for this product."],
     },
     originalPrice: {
         type: Number,
+        required: [true, "Please provide an original price (MRP) for this product."],
     },
     image: {
         type: String,
@@ -46,6 +47,14 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         enum: ["Active", "Out of Stock", "Archived"],
         default: "Active",
+    },
+    isFeatured: {
+        type: Boolean,
+        default: false,
+    },
+    isNewArrival: {
+        type: Boolean,
+        default: false,
     },
 }, { timestamps: true });
 

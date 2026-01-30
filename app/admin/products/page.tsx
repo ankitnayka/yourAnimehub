@@ -21,7 +21,8 @@ export default function AdminProductsPage() {
     const [formData, setFormData] = useState({
         name: "",
         description: "",
-        price: "" as string | number, // use string for input
+        price: "" as string | number, // Selling Price
+        originalPrice: "" as string | number, // MRP
         category: "",
         image: "",
         stock: 0,
@@ -86,6 +87,7 @@ export default function AdminProductsPage() {
             const payload = {
                 ...formData,
                 price: Number(formData.price),
+                originalPrice: Number(formData.originalPrice),
                 stock: Number(formData.stock)
             };
 
@@ -120,6 +122,7 @@ export default function AdminProductsPage() {
             name: product.name,
             description: product.description || "",
             price: product.price,
+            originalPrice: product.originalPrice || "",
             category: product.category,
             image: product.image,
             stock: product.stock || 0,
@@ -138,6 +141,7 @@ export default function AdminProductsPage() {
             name: "",
             description: "",
             price: "",
+            originalPrice: "",
             category: "",
             image: "",
             stock: 0,
@@ -206,13 +210,14 @@ export default function AdminProductsPage() {
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-4 border-b border-[#222] pb-4 mb-4">
                                     <div>
-                                        <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Price (₹)</label>
+                                        <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Selling Price (₹)</label>
                                         <div className="relative">
                                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
                                             <input
                                                 type="number" required
+                                                placeholder="e.g. 899"
                                                 className="w-full bg-black border border-[#333] pl-9 p-3 rounded text-white focus:border-red-600 outline-none"
                                                 value={formData.price}
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
@@ -220,16 +225,29 @@ export default function AdminProductsPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Stock</label>
+                                        <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Original Price / MRP (₹)</label>
                                         <div className="relative">
-                                            <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+                                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
                                             <input
                                                 type="number" required
+                                                placeholder="e.g. 1999"
                                                 className="w-full bg-black border border-[#333] pl-9 p-3 rounded text-white focus:border-red-600 outline-none"
-                                                value={formData.stock}
-                                                onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                                                value={formData.originalPrice}
+                                                onChange={e => setFormData({ ...formData, originalPrice: e.target.value })}
                                             />
                                         </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Stock Available</label>
+                                    <div className="relative">
+                                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+                                        <input
+                                            type="number" required
+                                            className="w-full bg-black border border-[#333] pl-9 p-3 rounded text-white focus:border-red-600 outline-none"
+                                            value={formData.stock}
+                                            onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -356,7 +374,12 @@ export default function AdminProductsPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-gray-400 text-sm">{product.category}</td>
-                                    <td className="px-6 py-4 text-white font-mono">₹{product.price}</td>
+                                    <td className="px-6 py-4 text-white font-mono">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold">₹{product.price}</span>
+                                            <span className="text-gray-500 text-[10px] line-through">₹{product.originalPrice}</span>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 text-gray-400">{product.stock || 0}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${product.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'

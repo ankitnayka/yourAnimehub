@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function CategoryGrid() {
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showAll, setShowAll] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -31,6 +31,9 @@ export default function CategoryGrid() {
     if (loading) return null;
     if (categories.length === 0) return null;
 
+    const displayedCategories = showAll ? categories : categories.slice(0, 4);
+    const hasMore = categories.length > 4;
+
     return (
         <section className="bg-black py-12 border-b border-white/5">
             <div className="max-w-[1920px] mx-auto px-6">
@@ -38,13 +41,19 @@ export default function CategoryGrid() {
                     <h2 className="text-3xl font-black uppercase text-white tracking-wide">
                         Shop By <span className="text-primary">Category</span>
                     </h2>
-                    <Link href="/collections" className="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider flex items-center gap-2 group">
-                        View All <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
+                    {hasMore && (
+                        <button
+                            onClick={() => setShowAll(!showAll)}
+                            className="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider flex items-center gap-2 group outline-none"
+                        >
+                            {showAll ? "Show Less" : "View All"}
+                            <ArrowRight className={`w-4 h-4 transition-transform ${showAll ? 'rotate-180' : 'group-hover:translate-x-1'}`} />
+                        </button>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    {categories.map((cat) => (
+                <div className={`grid grid-cols-2 md:grid-cols-3 ${showAll ? 'lg:grid-cols-6' : 'lg:grid-cols-4'} gap-4`}>
+                    {displayedCategories.map((cat) => (
                         <button
                             key={cat._id}
                             onClick={() => {
