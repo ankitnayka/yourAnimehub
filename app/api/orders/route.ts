@@ -6,6 +6,7 @@ import Product from '@/models/Product';
 import { verifyToken } from '@/lib/jwt';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sendOrderNotifications } from "@/lib/notifications";
 
 // GET - Fetch user's orders
 export async function GET(req: NextRequest) {
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
         await dbConnect();
 
         let userId: string | undefined;
+        let session: any = null;
 
         // 1. Try Bearer token
         const token = req.headers.get('authorization')?.split(' ')[1];
@@ -94,7 +96,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Try NextAuth session
         if (!userId) {
-            const session = await getServerSession(authOptions);
+            session = await getServerSession(authOptions);
             if (session?.user?.id) {
                 userId = session.user.id;
             }
@@ -175,6 +177,20 @@ export async function POST(req: NextRequest) {
                     item.productId,
                     { $inc: { stock: -item.quantity } }
                 );
+            }
+
+            // Send Notifications
+            try {
+                await sendOrderNotifications({
+                    email: session?.user?.email || (shippingAddress as any).email || "user@example.com", // Fallback if email not found
+                    phone: shippingAddress.phone,
+                    name: shippingAddress.name,
+                    orderId: order._id as string,
+                    totalAmount: order.totalAmount,
+                    items: order.orderItems
+                });
+            } catch (err) {
+                console.error("Notification error:", err);
             }
 
             // Clear cart

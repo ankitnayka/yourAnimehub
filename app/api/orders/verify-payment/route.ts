@@ -7,6 +7,7 @@ import { verifyToken } from '@/lib/jwt';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { verifyRazorpaySignature } from '@/lib/razorpay';
+import { sendOrderNotifications } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
     try {
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch the order
-        const order = await Order.findById(orderId);
+        const order = await Order.findById(orderId).populate('userId');
 
         if (!order) {
             return NextResponse.json(
@@ -100,6 +101,20 @@ export async function POST(req: NextRequest) {
                 item.productId,
                 { $inc: { stock: -item.quantity } }
             );
+        }
+
+        // Send Notifications
+        try {
+            await sendOrderNotifications({
+                email: (order.userId as any).email || "user@example.com", // Assuming userId population includes email, if not populated we might need to fetch user
+                phone: order.shippingAddress.phone, // Assuming order object has shipping address populated
+                name: order.shippingAddress.name,
+                orderId: order._id as string,
+                totalAmount: order.totalAmount,
+                items: order.orderItems
+            });
+        } catch (err) {
+            console.error("Notification error:", err);
         }
 
         // Clear user's cart
