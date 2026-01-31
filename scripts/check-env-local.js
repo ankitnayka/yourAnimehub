@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+dotenv.config();
 
 // The URI from .env.local
-const MONGODB_URI_LOCAL = 'mongodb+srv://ankitnayka:0K3Y2S8hyU8YzAbQ@admin.fbev97k.mongodb.net/youranimehub';
+const MONGODB_URI_LOCAL = process.env.MONGODB_URI;
 
 async function checkLocalEnvData() {
     console.log('Connecting to [youranimehub] database...');
