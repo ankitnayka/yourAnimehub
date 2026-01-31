@@ -48,7 +48,12 @@ export async function POST(request: Request) {
     await dbConnect();
     try {
         const user = validatePermission(request, PERMISSIONS.MANAGE_PRODUCTS);
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        if (!user) {
+            // Check if it's a token issue or permission issue
+            const authHeader = request.headers.get('Authorization');
+            if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         const body = await request.json();
 

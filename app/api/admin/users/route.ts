@@ -1,24 +1,38 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
 import { verifyAccessToken } from '@/lib/jwt';
 import bcrypt from 'bcryptjs';
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
     try {
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const token = authHeader.split(' ')[1];
         const decoded = verifyAccessToken(token);
 
-        if (!decoded || !['admin', 'super-admin'].includes(decoded.role as string)) {
+        if (!decoded || !['admin', 'super-admin', 'sub-admin'].includes(decoded.role as string)) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         await dbConnect();
-        const users = await User.find({ role: { $in: ['sub-admin', 'admin', 'super-admin'] } }).select('-password');
+
+        const role = req.nextUrl.searchParams.get('role');
+        let query = {};
+
+        if (role === 'user') {
+            query = { role: 'user' };
+        } else if (role === 'staff') {
+            query = { role: { $in: ['sub-admin', 'admin', 'super-admin'] } };
+        } else {
+            // Default to staff if no role specified, to maintain backward compatibility
+            query = { role: { $in: ['sub-admin', 'admin', 'super-admin'] } };
+        }
+
+        const users = await User.find(query).select('-password').sort({ createdAt: -1 });
         return NextResponse.json({ success: true, data: users });
     } catch (error) {
+        console.error("Error fetching users:", error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

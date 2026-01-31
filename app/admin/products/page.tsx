@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, Search, Edit, Trash, X, Save, Upload, Loader2, DollarSign, Package } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function AdminProductsPage() {
     const { accessToken } = useAuthStore();
@@ -38,14 +38,11 @@ export default function AdminProductsPage() {
     const fetchData = async () => {
         try {
             const [prodRes, catRes] = await Promise.all([
-                fetch("/api/products"),
-                accessToken ? axios.get("/api/admin/categories", { headers: { Authorization: `Bearer ${accessToken}` } }) : { data: { data: [] } } // Fail gracefully if no token yet, but usually we have it
+                api.get("/api/products"),
+                api.get("/api/admin/categories")
             ]);
 
-            const prodData = await prodRes.json();
-            if (prodData.success) setProducts(prodData.data);
-
-            // @ts-ignore
+            if (prodRes.data?.success) setProducts(prodRes.data.data);
             if (catRes.data?.success) setCategories(catRes.data.data);
 
         } catch (error) {
@@ -64,9 +61,8 @@ export default function AdminProductsPage() {
         data.append("file", file);
 
         try {
-            const res = await axios.post("/api/upload", data, {
+            const res = await api.post("/api/upload", data, {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
                     "Content-Type": "multipart/form-data"
                 }
             });
@@ -83,7 +79,6 @@ export default function AdminProductsPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const headers = { Authorization: `Bearer ${accessToken}` };
             const payload = {
                 ...formData,
                 price: Number(formData.price),
@@ -92,10 +87,10 @@ export default function AdminProductsPage() {
             };
 
             if (formType === 'add') {
-                await axios.post('/api/products', payload, { headers });
+                await api.post('/api/products', payload);
             } else {
                 if (!selectedId) return;
-                await axios.put(`/api/products/${selectedId}`, payload, { headers });
+                await api.put(`/api/products/${selectedId}`, payload);
             }
 
             resetForm();
@@ -108,9 +103,7 @@ export default function AdminProductsPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this product?")) return;
         try {
-            await axios.delete(`/api/products/${id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            await api.delete(`/api/products/${id}`);
             fetchData();
         } catch (error) {
             alert("Failed to delete product");

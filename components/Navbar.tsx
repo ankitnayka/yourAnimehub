@@ -64,7 +64,7 @@ export default function Navbar() {
     <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg" : "bg-transparent linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)"}`}>
       <AnnouncementBar />
 
-      <div className="max-w-[1920px] mx-auto px-10 py-6 flex justify-between items-center relative gap-8">
+      <div className="max-w-[1920px] mx-auto px-6 py-6 flex justify-between items-center relative gap-8">
 
         {/* Mobile Menu Trigger & Left Nav (Desktop) */}
         <div className="flex items-center gap-12 flex-1">

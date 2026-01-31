@@ -17,7 +17,7 @@ interface RefreshTokenPayload extends JwtPayload {
 }
 
 export const generateAccessToken = (userId: string, role: string) => {
-    return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '15m' });
+    return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '3h' });
 };
 
 export const generateRefreshToken = (userId: string) => {
@@ -39,3 +39,15 @@ export const verifyRefreshToken = (token: string): RefreshTokenPayload | null =>
         return null;
     }
 };
+
+// Alias for API routes compatibility
+export const verifyToken = (token: string) => {
+    const decoded = verifyAccessToken(token);
+    if (!decoded) return null;
+
+    return {
+        id: decoded.userId,
+        role: decoded.role
+    };
+};
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -19,23 +19,16 @@ import { PERMISSIONS } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
-
     const { user } = useAuthStore();
     const router = useRouter();
 
     const navItems = ADMIN_SIDEBAR_CONFIG.filter(item => {
-        // Always show everything if user is loading (or null). 
-        // Logic: Better to show a button that errors 403 than to hide the entire UI while loading.
         if (!user) return true;
-
         if (user.role === 'super-admin') return true;
-
         if (user.role === 'admin') {
             return item.requiredPermission !== PERMISSIONS.MANAGE_ADMINS;
         }
-
         if (user.role === 'sub-admin') {
             if (!item.requiredPermission) return true;
             return user.permissions?.includes(item.requiredPermission);
@@ -43,31 +36,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return false;
     });
 
-    return (
-        <div className="min-h-screen bg-black text-white flex">
-            {/* Mobile Sidebar Overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/80 z-40 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+    const isLoginPage = pathname === '/admin/login';
 
-            {/* Sidebar */}
-            <aside className={`
-        fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-64 bg-[#111] border-r border-[#222] transform transition-transform duration-200 ease-in-out flex flex-col h-screen
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-      `}>
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
+
+    return (
+        <div className="min-h-screen bg-black text-white flex print:bg-white print:text-black">
+            {/* Sidebar - Always Visible */}
+            <aside className="sticky top-0 w-64 flex-shrink-0 bg-[#111] border-r border-[#222] flex flex-col h-screen print:hidden">
                 <div className="h-16 flex items-center px-6 border-b border-[#222]">
-                    <span className="text-xl font-black uppercase text-white tracking-tighter">
+                    <Link href="/admin" className="text-xl font-black uppercase text-white tracking-tighter">
                         Hub<span className="text-primary">Admin</span>
-                    </span>
-                    <button
-                        className="ml-auto lg:hidden text-gray-400"
-                        onClick={() => setSidebarOpen(false)}
-                    >
-                        <X size={24} />
-                    </button>
+                    </Link>
                 </div>
 
                 <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
@@ -81,7 +63,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     ? "bg-primary text-white"
                                     : "text-gray-400 hover:bg-[#222] hover:text-white"
                                     }`}
-                                onClick={() => setSidebarOpen(false)}
                             >
                                 <item.icon size={18} />
                                 {item.name}
@@ -118,14 +99,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Header */}
-                <header className="h-16 border-b border-[#222] bg-black px-6 flex items-center justify-between sticky top-0 z-30">
-                    <button
-                        className="lg:hidden text-white"
-                        onClick={() => setSidebarOpen(true)}
-                    >
-                        <Menu size={24} />
-                    </button>
-                    <h1 className="text-sm font-bold text-gray-400 uppercase tracking-widest hidden md:block">
+                <header className="h-16 border-b border-[#222] bg-black px-6 flex items-center justify-between sticky top-0 z-30 print:hidden">
+                    <h1 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
                         YourAnimeHub Control Center
                     </h1>
                     <div className="flex items-center gap-4">

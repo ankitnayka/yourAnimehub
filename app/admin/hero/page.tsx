@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, Edit, Trash, X, Save, Upload, Loader2, Image as ImageIcon, Video as VideoIcon, MoveUp, MoveDown } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function AdminHeroPage() {
     const { accessToken } = useAuthStore();
@@ -35,9 +35,7 @@ export default function AdminHeroPage() {
     const fetchSlides = async () => {
         if (!accessToken) return;
         try {
-            const res = await axios.get("/api/admin/hero-slides", {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            const res = await api.get("/api/admin/hero-slides");
             if (res.data.success) {
                 setSlides(res.data.data);
             }
@@ -57,9 +55,8 @@ export default function AdminHeroPage() {
         data.append("file", file);
 
         try {
-            const res = await axios.post("/api/upload", data, {
+            const res = await api.post("/api/upload", data, {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
                     "Content-Type": "multipart/form-data"
                 }
             });
@@ -83,10 +80,10 @@ export default function AdminHeroPage() {
             };
 
             if (formType === 'add') {
-                await axios.post('/api/admin/hero-slides', payload, { headers });
+                await api.post('/api/admin/hero-slides', payload);
             } else {
                 if (!selectedId) return;
-                await axios.put(`/api/admin/hero-slides/${selectedId}`, payload, { headers });
+                await api.put(`/api/admin/hero-slides/${selectedId}`, payload);
             }
 
             resetForm();
@@ -99,9 +96,7 @@ export default function AdminHeroPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this slide?")) return;
         try {
-            await axios.delete(`/api/admin/hero-slides/${id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            await api.delete(`/api/admin/hero-slides/${id}`);
             fetchSlides();
         } catch (error) {
             alert("Failed to delete slide");

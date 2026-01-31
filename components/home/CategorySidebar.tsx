@@ -44,7 +44,7 @@ export default function CategorySidebar({ onCategoryChange, activeCategory = "Al
 
     return (
         <aside className="w-full md:w-[280px] flex-shrink-0 mb-8 md:mb-0">
-            <div className={`md:bg-gradient-to-b md:from-[#2A0A0A] md:to-[#1a0505] md:rounded-xl md:border md:border-white/5 md:overflow-hidden md:shadow-2xl md:sticky md:top-24`}>
+            <div className={`md:bg-gradient-to-b md:from-[#2A0A0A] md:to-[#1a0505] md:rounded-xl md:border md:border-white/5 md:overflow-hidden md:shadow-2xl md:sticky md:top-28`}>
 
                 {/* Mobile: Title + Dropdown Button */}
                 <div className="md:hidden flex flex-col gap-2">

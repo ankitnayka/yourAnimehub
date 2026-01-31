@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, Edit, Trash, X, Save, List, Upload, Loader2, Image as ImageIcon } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function AdminCategoriesPage() {
     const { accessToken } = useAuthStore();
@@ -30,9 +30,7 @@ export default function AdminCategoriesPage() {
     const fetchCategories = async () => {
         if (!accessToken) return;
         try {
-            const { data } = await axios.get('/api/admin/categories', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            const { data } = await api.get('/api/admin/categories');
             if (data.success) {
                 setCategories(data.data);
             }
@@ -52,10 +50,9 @@ export default function AdminCategoriesPage() {
         formData.append('file', file);
 
         try {
-            const res = await axios.post('/api/upload', formData, {
+            const res = await api.post('/api/upload', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${accessToken}`
+                    'Content-Type': 'multipart/form-data'
                 }
             });
             if (res.data.success) {
@@ -71,13 +68,11 @@ export default function AdminCategoriesPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const headers = { Authorization: `Bearer ${accessToken}` };
-
             if (formType === 'add') {
-                await axios.post('/api/admin/categories', formData, { headers });
+                await api.post('/api/admin/categories', formData);
             } else {
                 if (!selectedId) return;
-                await axios.put(`/api/admin/categories/${selectedId}`, formData, { headers });
+                await api.put(`/api/admin/categories/${selectedId}`, formData);
             }
 
             resetForm();
@@ -90,9 +85,7 @@ export default function AdminCategoriesPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this category?")) return;
         try {
-            await axios.delete(`/api/admin/categories/${id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            await api.delete(`/api/admin/categories/${id}`);
             fetchCategories();
         } catch (error) {
             alert("Failed to delete category");

@@ -32,6 +32,15 @@ export async function POST(req: Request) {
         // Generate new Access Token
         const accessToken = generateAccessToken(user._id.toString(), user.role);
 
+        // Set Access Token Cookie for Middleware
+        cookieStore.set('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 3 * 60 * 60, // 3 hours
+            path: '/',
+        });
+
         return NextResponse.json({ accessToken });
 
     } catch (error) {

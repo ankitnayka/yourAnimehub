@@ -3,6 +3,7 @@ export interface Product {
     name: string;
     price: number;
     originalPrice: number;
+    discountPercentage?: number;
     image: string;
     hoverImage?: string;
     badges?: string[];
@@ -13,3 +14,4 @@ export interface Product {
     isFeatured?: boolean;
     isNewArrival?: boolean;
 }
+

@@ -66,7 +66,7 @@ function HomeContent() {
         />
 
         {/* Product Feed */}
-        <div className="flex-1 min-h-screen">
+        <div className="flex-1 min-h-[600px]">
           <h2 className="text-3xl font-black uppercase text-white mb-8 flex items-center gap-4">
             {selectedCategory === "All Products" ? "Trending" : selectedCategory} <span className="text-primary">{selectedCategory === "All Products" ? "Now" : ""}</span>
             <span className="h-1 flex-1 bg-white/10 rounded-full"></span>

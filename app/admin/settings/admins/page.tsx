@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Loader2, Plus, Shield, Check, X, Trash } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function AdminManagementPage() {
     const { user, accessToken } = useAuthStore();
@@ -34,9 +34,7 @@ export default function AdminManagementPage() {
     const fetchAdmins = async () => {
         if (!accessToken) return;
         try {
-            const { data } = await axios.get('/api/admin/users', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            const { data } = await api.get('/api/admin/users');
             if (data.success) {
                 setAdmins(data.data);
             }
@@ -59,9 +57,7 @@ export default function AdminManagementPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('/api/admin/users', formData, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            await api.post('/api/admin/users', formData);
             setShowForm(false);
             setFormData({
                 name: "",
@@ -134,8 +130,8 @@ export default function AdminManagementPage() {
                                         type="button"
                                         onClick={() => handlePermissionToggle(p.id)}
                                         className={`px-3 py-1 rounded text-sm border ${formData.permissions.includes(p.id)
-                                                ? 'bg-red-600/20 border-red-600 text-red-500'
-                                                : 'border-[#333] text-gray-400 hover:border-gray-500'
+                                            ? 'bg-red-600/20 border-red-600 text-red-500'
+                                            : 'border-[#333] text-gray-400 hover:border-gray-500'
                                             }`}
                                     >
                                         {p.label}
@@ -172,8 +168,8 @@ export default function AdminManagementPage() {
                                     <td className="px-6 py-4 text-gray-400">{admin.email}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${admin.role === 'super-admin' ? 'bg-purple-500/20 text-purple-500' :
-                                                admin.role === 'admin' ? 'bg-blue-500/20 text-blue-500' :
-                                                    'bg-yellow-500/20 text-yellow-500'
+                                            admin.role === 'admin' ? 'bg-blue-500/20 text-blue-500' :
+                                                'bg-yellow-500/20 text-yellow-500'
                                             }`}>
                                             {admin.role}
                                         </span>

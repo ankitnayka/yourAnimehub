@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, Edit, Trash, X, Save, Menu } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function AdminNavbarPage() {
     const { accessToken } = useAuthStore();
@@ -29,9 +29,7 @@ export default function AdminNavbarPage() {
     const fetchItems = async () => {
         if (!accessToken) return;
         try {
-            const { data } = await axios.get('/api/admin/navbar', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            const { data } = await api.get('/api/admin/navbar');
             if (data.success) {
                 setItems(data.data);
             }
@@ -45,13 +43,11 @@ export default function AdminNavbarPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const headers = { Authorization: `Bearer ${accessToken}` };
-
             if (formType === 'add') {
-                await axios.post('/api/admin/navbar', formData, { headers });
+                await api.post('/api/admin/navbar', formData);
             } else {
                 if (!selectedId) return;
-                await axios.put(`/api/admin/navbar/${selectedId}`, formData, { headers });
+                await api.put(`/api/admin/navbar/${selectedId}`, formData);
             }
 
             resetForm();
@@ -64,9 +60,7 @@ export default function AdminNavbarPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this link?")) return;
         try {
-            await axios.delete(`/api/admin/navbar/${id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
+            await api.delete(`/api/admin/navbar/${id}`);
             fetchItems();
         } catch (error) {
             alert("Failed to delete item");
