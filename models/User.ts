@@ -32,7 +32,8 @@ const UserSchema = new Schema({
         required: true,
     },
     wishlist: [{
-        type: String, // Storing Product IDs or Slugs
+        type: Schema.Types.ObjectId,
+        ref: 'Product',
     }],
     cart: [{
         id: String,

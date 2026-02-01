@@ -5,6 +5,7 @@ import { Star, Minus, Plus, ShoppingCart, Check } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import WishlistButton from "@/components/ui/WishlistButton";
 
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
     const [selectedSize, setSelectedSize] = useState("M");
@@ -151,6 +152,11 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                                     </>
                                 )}
                             </button>
+                            {/* Wishlist Button on Product Page */}
+                            <WishlistButton
+                                productId={params.slug}
+                                className="h-14 w-14 flex items-center justify-center border border-gray-700 rounded-none hover:border-primary hover:bg-primary/10 transition-colors"
+                            />
                         </div>
                         <button className="w-full bg-green-600 text-white font-bold uppercase h-12 tracking-wide hover:bg-green-500 transition-colors flex items-center justify-center gap-2">
                             Order on WhatsApp

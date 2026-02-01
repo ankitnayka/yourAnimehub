@@ -4,6 +4,7 @@
 import { SessionProvider, useSession } from "next-auth/react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCartStore } from "@/store/useCartStore";
+import { useWishlistStore } from "@/store/useWishlistStore";
 import { useEffect } from "react";
 import { ReactNode } from "react";
 
@@ -15,6 +16,7 @@ const AuthSync = ({ children }: { children: ReactNode }) => {
     const { data: session, status } = useSession();
     const { login, checkAuth, isAuthenticated, setLoading, accessToken, user } = useAuthStore();
     const { syncCart, items, fetchCart } = useCartStore();
+    const { syncWishlist } = useWishlistStore();
 
     useEffect(() => {
         const syncAuth = async () => {
@@ -51,6 +53,9 @@ const AuthSync = ({ children }: { children: ReactNode }) => {
                     await fetchCart('session-auth');
                 }
 
+                // Sync Wishlist
+                await syncWishlist('session-auth'); // Pass token if available, or rely on cookie
+
                 setLoading(false);
             } else if (!isAuthenticated) {
                 // Try custom auth check (refresh token)
@@ -61,17 +66,26 @@ const AuthSync = ({ children }: { children: ReactNode }) => {
         };
 
         syncAuth();
-    }, [session, status, login, checkAuth, isAuthenticated, setLoading, accessToken, user, syncCart, fetchCart, items.length]);
+    }, [session, status, login, checkAuth, isAuthenticated, setLoading, accessToken, user, syncCart, fetchCart, items.length, syncWishlist]);
 
     return <>{children}</>;
 };
 
+import { ThemeProvider } from "./ThemeProvider";
+
 export function Providers({ children }: Props) {
     return (
         <SessionProvider>
-            <AuthSync>
-                {children}
-            </AuthSync>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <AuthSync>
+                    {children}
+                </AuthSync>
+            </ThemeProvider>
         </SessionProvider>
     );
 }

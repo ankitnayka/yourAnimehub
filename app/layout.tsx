@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${oswald.variable} font-sans bg-black text-white antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${oswald.variable} font-sans bg-background text-foreground antialiased transition-colors duration-300`}>
         <Providers>
           {children}
         </Providers>

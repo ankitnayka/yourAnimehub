@@ -1,11 +1,25 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Trenzic/AnimeHub Palette */
+  /* Light Mode Defaults */
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #FF3B30;
+  /* Anime Red */
+  --secondary: #f4f4f5;
+  /* Light Grey for cards */
+  --accent: #FF3B30;
+  --muted: #71717a;
+  --border: #e4e4e7;
+}
+
+.dark {
+  /* Trenzic/AnimeHub Palette (Dark) */
   --background: #000000;
   --foreground: #ffffff;
-  --primary: #FF3B30; /* Anime Red */
-  --secondary: #1A1A1A; /* Dark Grey for cards/sections */
+  --primary: #FF3B30;
+  --secondary: #1A1A1A;
   --accent: #FF3B30;
   --muted: #888888;
   --border: #333333;
@@ -19,8 +33,8 @@
   --color-accent: var(--accent);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  
-  --font-display: "Oswald", sans-serif; 
+
+  --font-display: "Oswald", sans-serif;
   --font-body: "Inter", sans-serif;
 }
 
@@ -28,20 +42,22 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
-  antialiased: true;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--background);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--secondary);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
 }

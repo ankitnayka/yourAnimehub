@@ -60,6 +60,12 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
         requiredPermission: PERMISSIONS.MANAGE_ADMINS
     },
     {
+        name: "Announcement",
+        href: "/admin/settings/announcement",
+        icon: Settings, // Using Settings icon as it's a setting
+        requiredPermission: PERMISSIONS.MANAGE_SETTINGS
+    },
+    {
         name: "Hero Slider",
         href: "/admin/hero",
         icon: LayoutDashboard,

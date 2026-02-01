@@ -48,7 +48,7 @@ function HomeContent() {
   }, [selectedCategory]);
 
   return (
-    <div className="flex flex-col gap-0 bg-black min-h-screen">
+    <div className="flex flex-col gap-0 bg-background min-h-screen">
       {/* 1. Hero Section (Only One) */}
       <div className="-mt-[88px]">
         <HeroSlider />
@@ -67,13 +67,13 @@ function HomeContent() {
 
         {/* Product Feed */}
         <div className="flex-1 min-h-[600px]">
-          <h2 className="text-3xl font-black uppercase text-white mb-8 flex items-center gap-4">
+          <h2 className="text-3xl font-black uppercase text-foreground mb-8 flex items-center gap-4">
             {selectedCategory === "All Products" ? "Trending" : selectedCategory} <span className="text-primary">{selectedCategory === "All Products" ? "Now" : ""}</span>
             <span className="h-1 flex-1 bg-white/10 rounded-full"></span>
           </h2>
 
           {loading ? (
-            <div className="text-white">Loading products...</div>
+            <div className="text-foreground">Loading products...</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-6">
               {products.map((product) => (
@@ -101,7 +101,7 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="bg-black min-h-screen text-white flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="bg-background min-h-screen text-foreground flex items-center justify-center">Loading...</div>}>
       <HomeContent />
     </Suspense>
   );

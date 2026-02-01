@@ -8,6 +8,7 @@ import { Check, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Product } from "@/types/product";
+import WishlistButton from "@/components/ui/WishlistButton";
 
 interface ProductCardProps {
     product: Product;
@@ -75,6 +76,10 @@ export default function ProductCard({ product }: ProductCardProps) {
                             {badge}
                         </span>
                     ))}
+                </div>
+                {/* Wishlist Button */}
+                <div className="absolute top-2 right-2 z-10">
+                    <WishlistButton productId={product.id || product.slug} className="p-2 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full shadow-sm hover:bg-white dark:hover:bg-black" />
                 </div>
             </div>
 
