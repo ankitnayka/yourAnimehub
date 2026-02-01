@@ -307,7 +307,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={address.name}
+                                        value={address.name || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -321,7 +321,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="text"
                                         name="street"
-                                        value={address.street}
+                                        value={address.street || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -335,7 +335,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="text"
                                         name="city"
-                                        value={address.city}
+                                        value={address.city || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -349,7 +349,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="text"
                                         name="state"
-                                        value={address.state}
+                                        value={address.state || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -363,7 +363,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="text"
                                         name="zip"
-                                        value={address.zip}
+                                        value={address.zip || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -377,7 +377,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="text"
                                         name="country"
-                                        value={address.country}
+                                        value={address.country || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -391,7 +391,7 @@ export default function CheckoutPage() {
                                     <input
                                         type="tel"
                                         name="phone"
-                                        value={address.phone}
+                                        value={address.phone || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

@@ -6,7 +6,8 @@ import {
     Settings,
     List,
     Menu,
-    Shield
+    Shield,
+    Link as LinkIcon
 } from "lucide-react";
 import { PERMISSIONS } from "@/lib/constants";
 
@@ -69,6 +70,12 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
         name: "Hero Slider",
         href: "/admin/hero",
         icon: LayoutDashboard,
+        requiredPermission: PERMISSIONS.MANAGE_SETTINGS
+    },
+    {
+        name: "Footer",
+        href: "/admin/settings/footer",
+        icon: LinkIcon,
         requiredPermission: PERMISSIONS.MANAGE_SETTINGS
     },
     {

@@ -42,14 +42,17 @@ export async function PUT(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { announcementText, announcementActive } = body;
+        const { announcementText, announcementActive, socialLinks, contactInfo } = body;
 
         let settings = await Settings.findOne();
         if (!settings) {
-            settings = new Settings({ announcementText, announcementActive });
+            settings = new Settings({ announcementText, announcementActive, socialLinks, contactInfo });
         } else {
-            settings.announcementText = announcementText;
-            settings.announcementActive = announcementActive;
+            // Update fields if provided
+            if (announcementText !== undefined) settings.announcementText = announcementText;
+            if (announcementActive !== undefined) settings.announcementActive = announcementActive;
+            if (socialLinks) settings.socialLinks = { ...settings.socialLinks, ...socialLinks };
+            if (contactInfo) settings.contactInfo = { ...settings.contactInfo, ...contactInfo };
         }
 
         await settings.save();
