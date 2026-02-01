@@ -7,8 +7,10 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { formatCurrency } from '@/lib/orderHelpers';
 import Image from 'next/image';
 import api from '@/lib/api';
+import { Check, MapPin, Plus } from 'lucide-react';
 
 interface ShippingAddress {
+    _id?: string;
     name: string;
     street: string;
     city: string;
@@ -16,6 +18,7 @@ interface ShippingAddress {
     zip: string;
     country: string;
     phone: string;
+    isDefault?: boolean;
 }
 
 declare global {
@@ -31,6 +34,8 @@ export default function CheckoutPage() {
 
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'Online'>('COD');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [savedAddresses, setSavedAddresses] = useState<ShippingAddress[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>('new');
     const [address, setAddress] = useState<ShippingAddress>({
         name: user?.name || '',
         street: '',
@@ -54,6 +59,8 @@ export default function CheckoutPage() {
             return;
         }
 
+        fetchSavedAddresses();
+
         // Load Razorpay script
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -65,7 +72,53 @@ export default function CheckoutPage() {
         };
     }, [user, items, router]);
 
+    const fetchSavedAddresses = async () => {
+        try {
+            const { data } = await api.get('/api/user/addresses');
+            if (data.success && data.addresses.length > 0) {
+                setSavedAddresses(data.addresses);
+
+                // Pre-select default address or the first one
+                const defaultAddr = data.addresses.find((a: ShippingAddress) => a.isDefault);
+                if (defaultAddr) {
+                    setSelectedAddressId(defaultAddr._id!);
+                    setAddress(defaultAddr);
+                } else if (data.addresses.length > 0) {
+                    setSelectedAddressId(data.addresses[0]._id!);
+                    setAddress(data.addresses[0]);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch addresses', error);
+        }
+    };
+
+    const handleAddressSelect = (addrId: string) => {
+        setSelectedAddressId(addrId);
+        if (addrId === 'new') {
+            setAddress({
+                name: user?.name || '',
+                street: '',
+                city: '',
+                state: '',
+                zip: '',
+                country: 'India',
+                phone: ''
+            });
+        } else {
+            const selected = savedAddresses.find(a => a._id === addrId);
+            if (selected) {
+                setAddress(selected);
+            }
+        }
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // If we are editing, we are essentially in "new address" mode conceptually for the form, 
+        // but if the user selected a saved address, modifying it here WON'T update the saved address in DB automatically.
+        // For simplicity, if user types in the form, we treat it as the current active address data used for order.
+        // We might want to switch to 'new' mode if they start typing to avoid confusion, 
+        // OR just simple binding is enough. Let's keep simple binding.
         setAddress({
             ...address,
             [e.target.name]: e.target.value
@@ -75,7 +128,7 @@ export default function CheckoutPage() {
     const validateAddress = (): boolean => {
         const requiredFields: (keyof ShippingAddress)[] = ['name', 'street', 'city', 'state', 'zip', 'country', 'phone'];
         for (const field of requiredFields) {
-            if (!address[field] || address[field].trim() === '') {
+            if (!address[field] || String(address[field]).trim() === '') {
                 alert(`Please fill in ${field}`);
                 return false;
             }
@@ -195,10 +248,55 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Shipping & Payment */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Shipping Address */}
+                        {/* Saved Addresses Selection */}
+                        {savedAddresses.length > 0 && (
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                                    Saved Addresses
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {savedAddresses.map((addr) => (
+                                        <div
+                                            key={addr._id}
+                                            onClick={() => handleAddressSelect(addr._id!)}
+                                            className={`border-2 rounded-lg p-4 cursor-pointer transition-all relative ${selectedAddressId === addr._id ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
+                                        >
+                                            {selectedAddressId === addr._id && (
+                                                <div className="absolute top-2 right-2 text-primary">
+                                                    <Check size={16} />
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <MapPin size={16} className="text-gray-500" />
+                                                <span className="font-bold">{addr.name}</span>
+                                            </div>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                {addr.street}, {addr.city}
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                {addr.state}, {addr.zip}
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                {addr.phone}
+                                            </p>
+                                        </div>
+                                    ))}
+
+                                    <div
+                                        onClick={() => handleAddressSelect('new')}
+                                        className={`border-2 border-dashed rounded-lg p-4 cursor-pointer transition-all flex flex-col items-center justify-center text-gray-500 hover:text-primary hover:border-primary h-full min-h-[140px] ${selectedAddressId === 'new' ? 'border-primary text-primary bg-primary/5' : 'border-gray-300 dark:border-gray-700'}`}
+                                    >
+                                        <Plus size={24} className="mb-2" />
+                                        <span className="font-medium">Add New Address</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Shipping Address Form */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                Shipping Address
+                                {selectedAddressId === 'new' ? 'New Shipping Address' : 'Shipping Address Details'}
                             </h2>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -309,14 +407,14 @@ export default function CheckoutPage() {
                             </h2>
 
                             <div className="space-y-4">
-                                <label className="flex items-start p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                                <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-primary'}`}>
                                     <input
                                         type="radio"
                                         name="paymentMethod"
                                         value="COD"
                                         checked={paymentMethod === 'COD'}
                                         onChange={(e) => setPaymentMethod(e.target.value as 'COD')}
-                                        className="mt-1 mr-3"
+                                        className="mt-1 mr-3 accent-primary"
                                     />
                                     <div>
                                         <div className="font-semibold text-gray-900 dark:text-white">
@@ -328,14 +426,14 @@ export default function CheckoutPage() {
                                     </div>
                                 </label>
 
-                                <label className="flex items-start p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400transition-colors">
+                                <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${paymentMethod === 'Online' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-primary'}`}>
                                     <input
                                         type="radio"
                                         name="paymentMethod"
                                         value="Online"
                                         checked={paymentMethod === 'Online'}
                                         onChange={(e) => setPaymentMethod(e.target.value as 'Online')}
-                                        className="mt-1 mr-3"
+                                        className="mt-1 mr-3 accent-primary"
                                     />
                                     <div>
                                         <div className="font-semibold text-gray-900 dark:text-white">
@@ -358,7 +456,7 @@ export default function CheckoutPage() {
                             </h2>
 
                             {/* Items List */}
-                            <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
+                            <div className="space-y-3 mb-6 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                                 {items.map((item) => (
                                     <div key={item.id} className="flex gap-3">
                                         <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
@@ -373,12 +471,17 @@ export default function CheckoutPage() {
                                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                                 {item.name}
                                             </p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                Qty: {item.quantity}
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Size: {item.size || 'M'}
                                             </p>
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {formatCurrency(item.price * item.quantity)}
-                                            </p>
+                                            <div className="flex justify-between items-center mt-1">
+                                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                    Qty: {item.quantity}
+                                                </p>
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {formatCurrency(item.price * item.quantity)}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -423,3 +526,17 @@ export default function CheckoutPage() {
         </div>
     );
 }
+
+// Helper for custom scrollbar (optional, but nice to have)
+const style = `
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+`;

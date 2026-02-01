@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 // Initialize Razorpay instance lazily or with a check
 export const razorpayInstance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'test_key_id',
+    key_id: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'test_key_id',
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'test_key_secret',
 });
 

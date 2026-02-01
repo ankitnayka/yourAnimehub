@@ -1,22 +1,47 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2, LogOut, Package, User, Heart, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
+import EditProfileModal from '@/components/Modals/EditProfileModal';
+import api from '@/lib/api';
 
 export default function DashboardPage() {
     const { user, isAuthenticated, isLoading, logout } = useAuthStore();
     const router = useRouter();
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+    const [stats, setStats] = useState({
+        ordersCount: 0,
+        wishlistCount: 0,
+        addressesCount: 0
+    });
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             router.push('/auth/login');
         }
     }, [isLoading, isAuthenticated, router]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchStats();
+        }
+    }, [isAuthenticated]);
+
+    const fetchStats = async () => {
+        try {
+            const { data } = await api.get('/api/user/dashboard-stats');
+            if (data.success) {
+                setStats(data.stats);
+            }
+        } catch (error) {
+            console.error('Failed to fetch stats');
+        }
+    };
 
     const handleLogout = async () => {
         await logout();
@@ -33,7 +58,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white pt-24 px-4 pb-12">
+        <div className="min-h-screen bg-neutral-950 text-white pt-8 px-4 pb-12">
             <div className="max-w-6xl mx-auto">
 
                 {/* Header */}
@@ -65,7 +90,12 @@ export default function DashboardPage() {
                         </div>
                         <h3 className="text-lg font-bold mb-1">Profile</h3>
                         <p className="text-sm text-neutral-500 mb-4">{user.email}</p>
-                        <button className="text-sm font-medium hover:text-primary transition-colors">Edit Profile &rarr;</button>
+                        <button
+                            onClick={() => setIsEditProfileOpen(true)}
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                        >
+                            Edit Profile &rarr;
+                        </button>
                     </motion.div>
 
                     {/* Orders Card */}
@@ -79,8 +109,8 @@ export default function DashboardPage() {
                             <Package className="w-6 h-6" />
                         </div>
                         <h3 className="text-lg font-bold mb-1">Orders</h3>
-                        <p className="text-sm text-neutral-500 mb-4">No recent orders</p>
-                        <Link href="/account/orders" className="text-sm font-medium hover:text-primary transition-colors">View All &rarr;</Link>
+                        <p className="text-sm text-neutral-500 mb-4">{stats.ordersCount} orders placed</p>
+                        <Link href="/my-orders" className="text-sm font-medium hover:text-primary transition-colors">View All &rarr;</Link>
                     </motion.div>
 
                     {/* Wishlist Card */}
@@ -94,7 +124,7 @@ export default function DashboardPage() {
                             <Heart className="w-6 h-6" />
                         </div>
                         <h3 className="text-lg font-bold mb-1">Wishlist</h3>
-                        <p className="text-sm text-neutral-500 mb-4">0 items saved</p>
+                        <p className="text-sm text-neutral-500 mb-4">{stats.wishlistCount} items saved</p>
                         <Link href="/wishlist" className="text-sm font-medium hover:text-primary transition-colors">View Wishlist &rarr;</Link>
                     </motion.div>
 
@@ -109,13 +139,17 @@ export default function DashboardPage() {
                             <MapPin className="w-6 h-6" />
                         </div>
                         <h3 className="text-lg font-bold mb-1">Addresses</h3>
-                        <p className="text-sm text-neutral-500 mb-4">Manage shipping info</p>
+                        <p className="text-sm text-neutral-500 mb-4">{stats.addressesCount} saved addresses</p>
                         <Link href="/account/addresses" className="text-sm font-medium hover:text-primary transition-colors">Manage &rarr;</Link>
                     </motion.div>
 
                 </div>
-
             </div>
+
+            <EditProfileModal
+                isOpen={isEditProfileOpen}
+                onClose={() => setIsEditProfileOpen(false)}
+            />
         </div>
     );
 }

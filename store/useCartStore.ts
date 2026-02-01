@@ -6,6 +6,8 @@ import { useAuthStore } from "./useAuthStore";
 
 interface CartItem extends Product {
     quantity: number;
+    size?: string;
+    color?: string;
 }
 
 interface CartState {
@@ -38,13 +40,16 @@ export const useCartStore = create<CartState>()(
                 // Check if user is authenticated (either via token or session)
                 const isAuthenticated = !!token || useAuthStore.getState().isAuthenticated;
 
+                // Get quantity from product if available (cast to any to avoid TS error if Product type doesn't have quantity)
+                const quantityToAdd = (product as any).quantity || 1;
+
                 if (isAuthenticated) {
                     // Add to database
                     try {
                         set({ isSyncing: true });
                         const response = await api.post('/api/cart', {
                             productId: product.id,
-                            quantity: 1
+                            quantity: quantityToAdd
                         });
 
                         if (response.data.success) {
@@ -58,7 +63,9 @@ export const useCartStore = create<CartState>()(
                                 slug: item.slug,
                                 quantity: item.quantity,
                                 originalPrice: item.originalPrice,
-                                discountPercentage: item.discountPercentage
+                                discountPercentage: item.discountPercentage,
+                                // Preserve size/color if they exist in the incoming product but not yet in backend response structure explicitly?
+                                // Ideally backend should return them. For now we trust the formatted items.
                             }));
                             set({ items: formattedItems });
                         }
@@ -69,13 +76,13 @@ export const useCartStore = create<CartState>()(
                             set({
                                 items: currentItems.map((item) =>
                                     item.id === product.id
-                                        ? { ...item, quantity: item.quantity + 1 }
+                                        ? { ...item, quantity: item.quantity + quantityToAdd }
                                         : item
                                 ),
                             });
                         } else {
                             set({
-                                items: [...currentItems, { ...product, quantity: 1 }],
+                                items: [...currentItems, { ...product, quantity: quantityToAdd }],
                             });
                         }
                     } finally {
@@ -87,13 +94,13 @@ export const useCartStore = create<CartState>()(
                         set({
                             items: currentItems.map((item) =>
                                 item.id === product.id
-                                    ? { ...item, quantity: item.quantity + 1 }
+                                    ? { ...item, quantity: item.quantity + quantityToAdd }
                                     : item
                             ),
                         });
                     } else {
                         set({
-                            items: [...currentItems, { ...product, quantity: 1 }],
+                            items: [...currentItems, { ...product, quantity: quantityToAdd }],
                         });
                     }
                 }

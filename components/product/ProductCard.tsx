@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Check, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Product } from "@/types/product";
 
 interface ProductCardProps {
@@ -12,7 +15,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
     const addItem = useCartStore((state) => state.addItem);
+    const { accessToken } = useAuthStore();
+    const router = useRouter();
 
     // Calculate discount percentage
     const discount = product.originalPrice
@@ -20,6 +26,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         : 0;
 
     const isOutOfStock = product.status === "Out of Stock" || (product.stock !== undefined && product.stock <= 0);
+
+    // Check if product is already in cart
+    const items = useCartStore((state) => state.items);
+    const isInCart = items.some((item) => item.id === product.id || item.slug === product.slug);
 
     return (
         <motion.div
@@ -99,10 +109,32 @@ export default function ProductCard({ product }: ProductCardProps) {
                         </button>
                     ) : (
                         <button
-                            onClick={() => addItem(product)}
-                            className="w-full bg-gradient-to-r from-[#4A0E0E] to-[#B22222] text-white font-bold uppercase tracking-wider py-2.5 text-[11px] rounded-md transition-all duration-300 hover:from-[#3A0B0B] hover:to-[#8B1A1A] hover:shadow-lg flex items-center justify-center gap-2"
+                            onClick={async (e) => {
+                                e.preventDefault(); // Prevent link navigation if inside a Link
+                                if (isInCart || isAdding) {
+                                    router.push('/cart');
+                                    return;
+                                }
+
+                                setIsAdding(true);
+                                await addItem(product, accessToken || undefined);
+                                setIsAdding(false);
+                            }}
+                            className={`w-full font-bold uppercase tracking-wider py-2.5 text-[11px] rounded-md transition-all duration-300 flex items-center justify-center gap-2
+                                ${isInCart
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-gradient-to-r from-[#4A0E0E] to-[#B22222] text-white hover:from-[#3A0B0B] hover:to-[#8B1A1A] hover:shadow-lg'
+                                }`}
                         >
-                            ADD TO CART
+                            {isInCart ? (
+                                <>
+                                    <Check size={14} /> ADDED
+                                </>
+                            ) : (
+                                <>
+                                    {isAdding ? 'ADDING...' : 'ADD TO CART'}
+                                </>
+                            )}
                         </button>
                     )}
                 </div>

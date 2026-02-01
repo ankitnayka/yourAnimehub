@@ -68,7 +68,7 @@ CartSchema.pre('save', function () {
 });
 
 // Add index for faster queries
-CartSchema.index({ userId: 1 });
+// CartSchema.index({ userId: 1 }); // Removed to avoid duplicate index warning as userId is already unique
 
 // Prevent Mongoose model compilation errors in development due to hot reloading
 if (process.env.NODE_ENV === 'development' && models.Cart) {

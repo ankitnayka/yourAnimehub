@@ -8,6 +8,7 @@ import { Package, ChevronRight } from 'lucide-react';
 import api from '@/lib/api';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { formatCurrency, formatOrderDate } from '@/lib/orderHelpers';
+import Breadcrumb from '@/components/ui/Breadcrumb';
 
 export default function MyOrdersPage() {
     const router = useRouter();
@@ -81,6 +82,7 @@ export default function MyOrdersPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
+                <Breadcrumb />
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
                     My Orders
                     <span className="text-lg font-normal text-gray-600 dark:text-gray-400 ml-3">

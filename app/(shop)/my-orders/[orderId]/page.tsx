@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Package, MapPin, CreditCard } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, CreditCard, Printer } from 'lucide-react';
 import api from '@/lib/api';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { formatCurrency, formatOrderDate } from '@/lib/orderHelpers';
@@ -43,6 +43,10 @@ export default function OrderDetailsPage() {
         }
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     if (!user) {
         return null;
     }
@@ -69,20 +73,35 @@ export default function OrderDetailsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8 print:bg-white print:p-0">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <Link
-                        href="/my-orders"
-                        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4 transition-colors"
+                <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
+                    <div className="flex flex-col">
+                        <Link
+                            href="/my-orders"
+                            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-2 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5 mr-2" />
+                            Back to My Orders
+                        </Link>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                            Order Details
+                        </h1>
+                    </div>
+                    <button
+                        onClick={handlePrint}
+                        className="flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm font-medium"
                     >
-                        <ArrowLeft className="w-5 h-5 mr-2" />
-                        Back to My Orders
-                    </Link>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        Order Details
-                    </h1>
+                        <Printer className="w-5 h-5" />
+                        Download Invoice
+                    </button>
+                </div>
+
+                {/* Print Header (Visible only when printing) */}
+                <div className="hidden print:block mb-8 border-b pb-4">
+                    <h1 className="text-4xl font-bold text-black mb-2">INVOICE</h1>
+                    <p className="text-gray-600">Order #{order._id}</p>
                 </div>
 
                 {/* Order Information Grid */}

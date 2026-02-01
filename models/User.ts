@@ -42,6 +42,15 @@ const UserSchema = new Schema({
         quantity: { type: Number, default: 1 },
         slug: String,
     }],
+    phone: {
+        type: String,
+        unique: true,
+        sparse: true, // Allow multiple users to have no phone number (null/undefined)
+    },
+    otp: {
+        code: String,
+        expiresAt: Date,
+    },
     addresses: [{
         street: String,
         city: String,

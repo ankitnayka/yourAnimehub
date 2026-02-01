@@ -81,7 +81,8 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify order belongs to user
-        if (order.userId.toString() !== userId) {
+        const orderUserId = (order.userId as any)._id.toString();
+        if (orderUserId !== userId) {
             return NextResponse.json(
                 { success: false, message: 'Unauthorized to verify this payment' },
                 { status: 403 }

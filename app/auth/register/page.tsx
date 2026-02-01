@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 export default function RegisterPage() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState(''); // Add phone state
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -21,7 +22,7 @@ export default function RegisterPage() {
         setError('');
 
         try {
-            await axios.post('/api/auth/register', { name, email, password });
+            await axios.post('/api/auth/register', { name, email, phone, password }); // Include phone
             router.push('/auth/login?registered=true');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Something went wrong');
@@ -60,6 +61,17 @@ export default function RegisterPage() {
                         className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
                         placeholder="name@example.com"
                         required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-neutral-400 mb-1">Phone Number (Optional)</label>
+                    <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
+                        placeholder="1234567890"
                     />
                 </div>
 

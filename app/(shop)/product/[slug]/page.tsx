@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Star, Minus, Plus, ShoppingCart, Check } from "lucide-react";
+import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
 
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
     const [selectedSize, setSelectedSize] = useState("M");
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState(0);
+    const [isAdding, setIsAdding] = useState(false);
+
+    const router = useRouter();
+    const { addItem } = useCartStore();
+    const { accessToken } = useAuthStore();
 
     // Mock Data (replace with real fetch later)
     const product = {
@@ -20,6 +28,37 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             "https://trenzicwear.com/cdn/shop/files/IMG_0490.jpg?v=1729687989&width=720"
         ],
         sizes: ["S", "M", "L", "XL", "XXL"]
+    };
+
+    const handleAddToCart = async () => {
+        try {
+            setIsAdding(true);
+
+            // Construct product object for cart
+            // In a real app, you'd fetch the ID from the backend or pass it in props
+            const cartItem = {
+                id: params.slug, // Using slug as ID for this mock
+                name: product.name,
+                price: product.price,
+                originalPrice: product.originalPrice,
+                image: product.images[0],
+                slug: params.slug,
+                category: "Unisex",
+                quantity: quantity,
+                size: selectedSize, // Include selected size
+            } as any;
+
+            await addItem(cartItem, accessToken || undefined);
+
+            // Small delay to show "Added" state then redirect
+            setTimeout(() => {
+                router.push('/cart');
+            }, 600);
+        } catch (error) {
+            console.error("Add to cart failed", error);
+            setIsAdding(false);
+            // Optionally show toast/alert
+        }
     };
 
     return (
@@ -93,8 +132,24 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                                 <span className="font-bold text-lg">{quantity}</span>
                                 <button onClick={() => setQuantity(quantity + 1)} className="hover:text-primary"><Plus size={18} /></button>
                             </div>
-                            <button className="flex-1 bg-primary text-white font-black uppercase tracking-widest h-14 hover:bg-white hover:text-black transition-colors flex items-center justify-center gap-2 text-lg">
-                                <ShoppingCart size={20} /> Add to Cart
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={isAdding}
+                                className={`flex-1 font-black uppercase tracking-widest h-14 transition-all flex items-center justify-center gap-2 text-lg
+                                    ${isAdding
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-primary text-white hover:bg-white hover:text-black'
+                                    }`}
+                            >
+                                {isAdding ? (
+                                    <>
+                                        <Check size={20} /> Added
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingCart size={20} /> Add to Cart
+                                    </>
+                                )}
                             </button>
                         </div>
                         <button className="w-full bg-green-600 text-white font-bold uppercase h-12 tracking-wide hover:bg-green-500 transition-colors flex items-center justify-center gap-2">
