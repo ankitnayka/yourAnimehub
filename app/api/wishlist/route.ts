@@ -5,23 +5,41 @@ import { verifyToken } from "@/lib/jwt";
 import mongoose from "mongoose";
 
 // GET /api/wishlist - Fetch user wishlist (populated)
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+// Helper to get authenticated user ID
+async function getUserId(req: NextRequest): Promise<string | null> {
+    // 1. Check Bearer Token (Custom Auth)
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        if (token && token !== 'session-auth') {
+            const decoded = verifyToken(token);
+            if (decoded?.id) return decoded.id;
+        }
+    }
+
+    // 2. Check NextAuth Session (Google Auth)
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+        return session.user.id;
+    }
+
+    return null;
+}
+
+// GET /api/wishlist - Fetch user wishlist (populated)
 export async function GET(req: NextRequest) {
     try {
         await dbConnect();
 
-        const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        const userId = await getUserId(req);
+        if (!userId) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
 
-        const token = authHeader.split(" ")[1];
-        const decoded = await verifyToken(token);
-
-        if (!decoded || !decoded.id) {
-            return NextResponse.json({ success: false, message: "Invalid Token" }, { status: 401 });
-        }
-
-        const user = await User.findById(decoded.id).populate("wishlist");
+        const user = await User.findById(userId).populate("wishlist");
         if (!user) {
             return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
         }
@@ -39,16 +57,9 @@ export async function POST(req: NextRequest) {
     try {
         await dbConnect();
 
-        const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        const userId = await getUserId(req);
+        if (!userId) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-        }
-
-        const token = authHeader.split(" ")[1];
-        const decoded = await verifyToken(token);
-
-        if (!decoded || !decoded.id) {
-            return NextResponse.json({ success: false, message: "Invalid Token" }, { status: 401 });
         }
 
         const body = await req.json();
@@ -64,7 +75,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: "Invalid Product ID" }, { status: 400 });
         }
 
-        await User.findByIdAndUpdate(decoded.id, {
+        await User.findByIdAndUpdate(userId, {
             $addToSet: { wishlist: productId } // Prevent duplicates
         });
 
@@ -81,16 +92,9 @@ export async function DELETE(req: NextRequest) {
     try {
         await dbConnect();
 
-        const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        const userId = await getUserId(req);
+        if (!userId) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-        }
-
-        const token = authHeader.split(" ")[1];
-        const decoded = await verifyToken(token);
-
-        if (!decoded || !decoded.id) {
-            return NextResponse.json({ success: false, message: "Invalid Token" }, { status: 401 });
         }
 
         const body = await req.json();
@@ -104,7 +108,7 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ success: false, message: "Invalid Product ID" }, { status: 400 });
         }
 
-        await User.findByIdAndUpdate(decoded.id, {
+        await User.findByIdAndUpdate(userId, {
             $pull: { wishlist: productId }
         });
 
@@ -121,16 +125,9 @@ export async function PUT(req: NextRequest) {
     try {
         await dbConnect();
 
-        const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        const userId = await getUserId(req);
+        if (!userId) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-        }
-
-        const token = authHeader.split(" ")[1];
-        const decoded = await verifyToken(token);
-
-        if (!decoded || !decoded.id) {
-            return NextResponse.json({ success: false, message: "Invalid Token" }, { status: 401 });
         }
 
         const body = await req.json();
@@ -144,7 +141,7 @@ export async function PUT(req: NextRequest) {
         const validIds = productIds.filter(id => mongoose.Types.ObjectId.isValid(id));
 
         if (validIds.length > 0) {
-            await User.findByIdAndUpdate(decoded.id, {
+            await User.findByIdAndUpdate(userId, {
                 $addToSet: { wishlist: { $each: validIds } }
             });
         }

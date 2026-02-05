@@ -3,6 +3,32 @@ import dbConnect from '@/lib/dbConnect';
 import Cart from '@/models/Cart';
 import { verifyToken } from '@/lib/jwt';
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+// Helper to get authenticated user ID
+async function getUserId(req: NextRequest): Promise<string | null> {
+    // 1. Check Bearer Token (Custom Auth)
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        if (token && token !== 'session-auth') {
+            try {
+                const decoded = await verifyToken(token);
+                if (decoded?.id) return decoded.id;
+            } catch { }
+        }
+    }
+
+    // 2. Check NextAuth Session (Google Auth)
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+        return session.user.id;
+    }
+
+    return null;
+}
+
 // PATCH - Update item quantity
 export async function PATCH(
     req: NextRequest,
@@ -12,19 +38,11 @@ export async function PATCH(
         await dbConnect();
 
         const { itemId } = await params;
-        const token = req.headers.get('authorization')?.split(' ')[1];
 
-        if (!token) {
+        const userId = await getUserId(req);
+        if (!userId) {
             return NextResponse.json(
                 { success: false, message: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
-
-        const decoded = await verifyToken(token);
-        if (!decoded || !decoded.id) {
-            return NextResponse.json(
-                { success: false, message: 'Invalid token' },
                 { status: 401 }
             );
         }
@@ -39,7 +57,7 @@ export async function PATCH(
             );
         }
 
-        const cart = await Cart.findOne({ userId: decoded.id });
+        const cart = await Cart.findOne({ userId });
 
         if (!cart) {
             return NextResponse.json(
@@ -91,24 +109,16 @@ export async function DELETE(
         await dbConnect();
 
         const { itemId } = await params;
-        const token = req.headers.get('authorization')?.split(' ')[1];
 
-        if (!token) {
+        const userId = await getUserId(req);
+        if (!userId) {
             return NextResponse.json(
                 { success: false, message: 'Unauthorized' },
                 { status: 401 }
             );
         }
 
-        const decoded = await verifyToken(token);
-        if (!decoded || !decoded.id) {
-            return NextResponse.json(
-                { success: false, message: 'Invalid token' },
-                { status: 401 }
-            );
-        }
-
-        const cart = await Cart.findOne({ userId: decoded.id });
+        const cart = await Cart.findOne({ userId });
 
         if (!cart) {
             return NextResponse.json(
