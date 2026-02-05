@@ -27,13 +27,56 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const category = searchParams.get('category');
+        const slug = searchParams.get('slug');
+        const minPrice = searchParams.get('minPrice');
+        const maxPrice = searchParams.get('maxPrice');
+        const sizes = searchParams.get('sizes'); // comma separated
+        const featured = searchParams.get('featured');
+        const newArrival = searchParams.get('new');
+        const sort = searchParams.get('sort');
 
-        let query = {};
+        let query: any = {};
+
+        // Category Filter
         if (category && category !== 'All Products') {
-            query = { category: category };
+            query.category = category;
         }
 
-        const products = await Product.find(query).sort({ createdAt: -1 }).lean();
+        // Slug Filter
+        if (slug) {
+            query.slug = slug;
+        }
+
+        // Price Filter
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = Number(minPrice);
+            if (maxPrice) query.price.$lte = Number(maxPrice);
+        }
+
+        // Size Filter
+        if (sizes) {
+            const sizeList = sizes.split(',');
+            query.sizes = { $in: sizeList };
+        }
+
+        // Featured Filter
+        if (featured === 'true') {
+            query.isFeatured = true;
+        }
+
+        // New Arrival Filter (either via explicit param or could be implicit via sort)
+        if (newArrival === 'true') {
+            query.isNewArrival = true;
+        }
+
+        // Determine Sort
+        let sortOption: any = { createdAt: -1 }; // Default: Newest first
+        if (sort === 'price_asc') sortOption = { price: 1 };
+        if (sort === 'price_desc') sortOption = { price: -1 };
+        // if (sort === 'newest') sortOption = { createdAt: -1 }; // Already default
+
+        const products = await Product.find(query).sort(sortOption).lean();
         const formattedProducts = products.map((product: any) => ({
             ...product,
             id: product._id.toString(),

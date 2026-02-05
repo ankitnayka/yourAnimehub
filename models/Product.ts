@@ -23,6 +23,10 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please provide an image URL for this product."],
     },
+    images: {
+        type: [String],
+        default: [],
+    },
     hoverImage: {
         type: String,
     },
@@ -39,6 +43,16 @@ const ProductSchema = new mongoose.Schema({
         type: [String],
         default: [],
     },
+    sizes: {
+        type: [String],
+        default: [],
+    },
+    variants: [
+        {
+            size: { type: String, required: true },
+            stock: { type: Number, default: 0 }
+        }
+    ],
     stock: {
         type: Number,
         default: 0,

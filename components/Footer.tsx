@@ -72,11 +72,10 @@ export default async function Footer() {
                     <div>
                         <h3 className="font-bold text-lg mb-6 text-black dark:text-white uppercase tracking-wider">Products</h3>
                         <ul className="space-y-4 text-gray-600 dark:text-gray-400">
-                            <li><Link href="/products?category=new-arrivals" className="hover:text-primary transition-colors">New Arrivals</Link></li>
-                            <li><Link href="/products?category=best-sellers" className="hover:text-primary transition-colors">Best Sellers</Link></li>
-                            <li><Link href="/products?category=apparel" className="hover:text-primary transition-colors">Apparel</Link></li>
-                            <li><Link href="/products?category=accessories" className="hover:text-primary transition-colors">Accessories</Link></li>
-                            <li><Link href="/products?category=sale" className="hover:text-primary transition-colors">Sale</Link></li>
+                            <li><Link href="/products?new=true" className="hover:text-primary transition-colors">New Arrivals</Link></li>
+                            <li><Link href="/products?featured=true" className="hover:text-primary transition-colors">Featured Products</Link></li>
+                            {/* <li><Link href="/products?category=apparel" className="hover:text-primary transition-colors">Apparel</Link></li> */}
+
                         </ul>
                     </div>
 

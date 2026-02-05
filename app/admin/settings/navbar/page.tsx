@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, Edit, Trash, X, Save, Menu } from "lucide-react";
 import api from "@/lib/api";
+import TableSkeleton from "@/components/admin/TableSkeleton";
 
 export default function AdminNavbarPage() {
     const { accessToken } = useAuthStore();
@@ -187,7 +188,7 @@ export default function AdminNavbarPage() {
                     </thead>
                     <tbody className="divide-y divide-[#222]">
                         {loading ? (
-                            <tr><td colSpan={5} className="text-center py-4 text-white">Loading...</td></tr>
+                            <TableSkeleton rows={5} columns={5} />
                         ) : (
                             items.map((item) => (
                                 <tr key={item._id} className="hover:bg-[#1a1a1a] transition-colors group">

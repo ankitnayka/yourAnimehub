@@ -7,7 +7,8 @@ import {
     List,
     Menu,
     Shield,
-    Link as LinkIcon
+    Link as LinkIcon,
+    MessageSquare
 } from "lucide-react";
 import { PERMISSIONS } from "@/lib/constants";
 
@@ -23,6 +24,12 @@ export const ADMIN_SIDEBAR_CONFIG: SidebarItem[] = [
         name: "Dashboard",
         href: "/admin",
         icon: LayoutDashboard
+    },
+    {
+        name: "Questions",
+        href: "/admin/questions",
+        icon: MessageSquare,
+        requiredPermission: PERMISSIONS.MANAGE_PRODUCTS
     },
     {
         name: "Products",

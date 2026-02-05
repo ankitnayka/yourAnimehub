@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Plus, Search, Edit, Trash, X, Save, Upload, Loader2, DollarSign, Package } from "lucide-react";
 import api from "@/lib/api";
+import TableSkeleton from "@/components/admin/TableSkeleton";
 
 export default function AdminProductsPage() {
     const { accessToken } = useAuthStore();
@@ -25,10 +26,13 @@ export default function AdminProductsPage() {
         originalPrice: "" as string | number, // MRP
         category: "",
         image: "",
+        images: [] as string[],
         stock: 0,
         status: "Active",
         isFeatured: false,
         isNewArrival: false,
+        sizes: [] as string[],
+        variants: [] as { size: string, stock: number }[],
     });
 
     useEffect(() => {
@@ -53,22 +57,38 @@ export default function AdminProductsPage() {
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        if (formData.images.length + files.length > 10) {
+            alert("Maximum 10 images allowed.");
+            return;
+        }
 
         setUploading(true);
-        const data = new FormData();
-        data.append("file", file);
+        const newImages: string[] = [];
 
         try {
-            const res = await api.post("/api/upload", data, {
-                headers: {
-                    "Content-Type": "multipart/form-data"
+            // Upload each file
+            await Promise.all(Array.from(files).map(async (file) => {
+                const data = new FormData();
+                data.append("file", file);
+                const res = await api.post("/api/upload", data, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
+                if (res.data.success) {
+                    newImages.push(res.data.url);
                 }
+            }));
+
+            setFormData(prev => {
+                const updatedImages = [...prev.images, ...newImages];
+                return {
+                    ...prev,
+                    images: updatedImages,
+                    image: updatedImages.length > 0 ? updatedImages[0] : "" // Ensure primary image is set
+                };
             });
-            if (res.data.success) {
-                setFormData(prev => ({ ...prev, image: res.data.url }));
-            }
         } catch (error) {
             alert("Upload failed");
         } finally {
@@ -76,14 +96,34 @@ export default function AdminProductsPage() {
         }
     };
 
+    const removeImage = (indexToRemove: number) => {
+        setFormData(prev => {
+            const updatedImages = prev.images.filter((_, idx) => idx !== indexToRemove);
+            return {
+                ...prev,
+                images: updatedImages,
+                image: updatedImages.length > 0 ? updatedImages[0] : ""
+            };
+        });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (formData.images.length === 0) {
+            alert("Please upload at least 1 image");
+            return;
+        }
+
         try {
             const payload = {
                 ...formData,
                 price: Number(formData.price),
                 originalPrice: Number(formData.originalPrice),
-                stock: Number(formData.stock)
+                stock: Number(formData.stock),
+                // Ensure image is the first one, and images array is full
+                image: formData.images[0],
+                images: formData.images
             };
 
             if (formType === 'add') {
@@ -111,6 +151,11 @@ export default function AdminProductsPage() {
     };
 
     const handleEdit = (product: any) => {
+        // Handle migration from old single-image products
+        const existingImages = product.images && product.images.length > 0
+            ? product.images
+            : (product.image ? [product.image] : []);
+
         setFormData({
             name: product.name,
             description: product.description || "",
@@ -118,10 +163,13 @@ export default function AdminProductsPage() {
             originalPrice: product.originalPrice || "",
             category: product.category,
             image: product.image,
+            images: existingImages,
             stock: product.stock || 0,
             status: product.status || "Active",
             isFeatured: product.isFeatured || false,
-            isNewArrival: product.isNewArrival || false
+            isNewArrival: product.isNewArrival || false,
+            sizes: product.sizes || [],
+            variants: product.variants || [],
         });
         setSelectedId(product._id || product.id);
         setFormType('edit');
@@ -137,10 +185,13 @@ export default function AdminProductsPage() {
             originalPrice: "",
             category: "",
             image: "",
+            images: [],
             stock: 0,
             status: "Active",
             isFeatured: false,
             isNewArrival: false,
+            sizes: [],
+            variants: [],
         });
         setSelectedId(null);
         setFormType('add');
@@ -248,7 +299,6 @@ export default function AdminProductsPage() {
                             {/* Right Column */}
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Category</label>
                                     <select
                                         required
                                         className="w-full bg-black border border-[#333] p-3 rounded text-white focus:border-red-600 outline-none appearance-none"
@@ -261,35 +311,114 @@ export default function AdminProductsPage() {
                                         ))}
                                     </select>
                                 </div>
+
                                 <div>
-                                    <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Product Image</label>
-                                    <div className="border border-dashed border-[#333] bg-black rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-gray-500 transition-colors relative">
-                                        {formData.image ? (
-                                            <div className="relative w-full h-48">
-                                                <img src={formData.image} alt="Preview" className="w-full h-full object-contain" />
+                                    <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Available Sizes & Stock</label>
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {["S", "M", "L", "XL", "XXL"].map(size => (
+                                            <label key={size} className={`cursor-pointer px-3 py-2 rounded border transition-colors text-sm font-bold ${formData.sizes?.includes(size)
+                                                ? 'bg-white text-black border-white'
+                                                : 'bg-black text-gray-400 border-[#333] hover:border-gray-500'
+                                                }`}>
+                                                <input
+                                                    type="checkbox"
+                                                    className="hidden"
+                                                    checked={formData.sizes?.includes(size)}
+                                                    onChange={(e) => {
+                                                        const currentSizes = formData.sizes || [];
+                                                        let newSizes;
+                                                        if (e.target.checked) {
+                                                            newSizes = [...currentSizes, size];
+                                                        } else {
+                                                            newSizes = currentSizes.filter(s => s !== size);
+                                                        }
+                                                        setFormData({ ...formData, sizes: newSizes });
+                                                    }}
+                                                />
+                                                {size}
+                                            </label>
+                                        ))}
+                                    </div>
+
+                                    {/* Per Size Stock Inputs */}
+                                    {formData.sizes && formData.sizes.length > 0 && (
+                                        <div className="bg-[#1a1a1a] p-3 rounded border border-[#333] space-y-3">
+                                            <div className="flex justify-between items-center text-xs text-gray-400 uppercase font-bold border-b border-[#333] pb-2 mb-2">
+                                                <span>Size Specific Stock</span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setFormData({ ...formData, image: "" })}
-                                                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full shadow hover:bg-red-700"
+                                                    onClick={() => {
+                                                        // Apply global stock to all selected variants
+                                                        const defaultStock = Number(formData.stock) || 0;
+                                                        const newVariants = formData.sizes.map(s => ({ size: s, stock: defaultStock }));
+                                                        setFormData(prev => ({ ...prev, variants: newVariants }));
+                                                    }}
+                                                    className="text-primary hover:underline font-normal normal-case"
                                                 >
-                                                    <X size={16} />
+                                                    Set all to {formData.stock}
                                                 </button>
                                             </div>
-                                        ) : (
-                                            <>
-                                                {uploading ? <Loader2 className="animate-spin text-primary mb-2" /> : <Upload className="text-gray-500 mb-2" size={32} />}
-                                                <p className="text-gray-400 text-sm">{uploading ? "Uploading..." : "Click to upload image"}</p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {formData.sizes.map(size => {
+                                                    const variant = formData.variants?.find(v => v.size === size);
+                                                    const stockVal = variant ? variant.stock : "";
+                                                    return (
+                                                        <div key={size} className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 flex items-center justify-center bg-[#333] rounded font-bold text-white text-xs">{size}</div>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="Qty"
+                                                                className="w-full bg-black border border-[#333] p-1.5 rounded text-white text-sm focus:border-red-600 outline-none"
+                                                                value={stockVal}
+                                                                onChange={(e) => {
+                                                                    const val = parseInt(e.target.value) || 0;
+                                                                    const currentVariants = formData.variants || [];
+                                                                    const otherVariants = currentVariants.filter(v => v.size !== size);
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        variants: [...otherVariants, { size, stock: val }]
+                                                                    }));
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 text-xs uppercase font-bold mb-2">Product Images ({formData.images.length}/10)</label>
+
+                                    {/* Image Grid */}
+                                    <div className="grid grid-cols-4 gap-2 mb-2">
+                                        {formData.images.map((img, idx) => (
+                                            <div key={idx} className="relative aspect-square border border-[#333] rounded bg-black overflow-hidden group">
+                                                <img src={img} alt={`Img ${idx}`} className="w-full h-full object-cover" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {formData.images.length < 10 && (
+                                            <label className="border border-dashed border-[#333] bg-black rounded flex flex-col items-center justify-center cursor-pointer hover:border-gray-500 transition-colors aspect-square">
+                                                {uploading ? <Loader2 className="animate-spin text-primary" size={20} /> : <Plus className="text-gray-500" size={20} />}
                                                 <input
                                                     type="file"
                                                     accept="image/*"
+                                                    multiple
                                                     onChange={handleFileUpload}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                    className="hidden"
                                                     disabled={uploading}
                                                 />
-                                            </>
+                                            </label>
                                         )}
                                     </div>
-                                    {formData.image && <p className="text-xs text-gray-500 mt-2 truncate">{formData.image}</p>}
+                                    <p className="text-xs text-gray-500">Min 1, Max 10 images.</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 pt-2">
@@ -346,7 +475,7 @@ export default function AdminProductsPage() {
                     </thead>
                     <tbody className="divide-y divide-[#222]">
                         {loading ? (
-                            <tr><td colSpan={6} className="text-center py-8 text-white"><Loader2 className="animate-spin mx-auto mb-2" />Loading products...</td></tr>
+                            <TableSkeleton rows={5} columns={6} />
                         ) : (
                             filteredProducts.map((product) => (
                                 <tr key={product._id || product.id} className="hover:bg-[#1a1a1a] transition-colors group">

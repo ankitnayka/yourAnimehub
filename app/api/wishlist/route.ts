@@ -100,6 +100,10 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ success: false, message: "Product ID required" }, { status: 400 });
         }
 
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return NextResponse.json({ success: false, message: "Invalid Product ID" }, { status: 400 });
+        }
+
         await User.findByIdAndUpdate(decoded.id, {
             $pull: { wishlist: productId }
         });

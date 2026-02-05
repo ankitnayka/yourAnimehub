@@ -18,9 +18,9 @@ const SettingsSchema = new mongoose.Schema({
         linkedin: { type: String, default: '' }
     },
     contactInfo: {
-        address: { type: String, default: '123 Fashion St, Design City, DC 12345' },
-        phone: { type: String, default: '+1 (555) 123-4567' },
-        email: { type: String, default: 'support@fash.com' }
+        address: { type: String, default: 'Samodiya Faliya,opp,Agricuture College,Navsari,Gujarat,India' },
+        phone: { type: String, default: '+91 9664594451' },
+        email: { type: String, default: 'ankit@gmail.com' }
     }
 }, { timestamps: true });
 

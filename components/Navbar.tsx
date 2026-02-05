@@ -144,7 +144,7 @@ export default function Navbar() {
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-2xl font-black uppercase text-white hover:text-primary tracking-wider"
+                    className="text-2xl font-black uppercase text-black dark:text-white hover:text-primary tracking-wider"
                     onClick={() => setOpenMenu(false)}
                   >
                     {link.name}

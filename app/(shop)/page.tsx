@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import HeroSlider from "@/components/HeroSilder";
 import ProductCard from "@/components/product/ProductCard";
+import ProductCardSkeleton from "@/components/product/ProductCardSkeleton";
 import CategorySidebar from "@/components/home/CategorySidebar";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import { Product } from "@/types/product";
@@ -73,7 +74,11 @@ function HomeContent() {
           </h2>
 
           {loading ? (
-            <div className="text-foreground">Loading products...</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-6">
               {products.map((product) => (

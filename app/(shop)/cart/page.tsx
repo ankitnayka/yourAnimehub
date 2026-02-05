@@ -8,18 +8,24 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Minus, Plus, ShoppingCart, Pencil, Truck, Tag } from 'lucide-react';
 import { formatCurrency } from '@/lib/orderHelpers';
+import CartSkeleton from "@/components/cart/CartSkeleton";
 
 export default function CartPage() {
     const router = useRouter();
     const { items, removeItem, updateQuantity, getTotalAmount, getItemCount, fetchCart } = useCartStore();
     const { accessToken, user } = useAuthStore();
     const [activeTab, setActiveTab] = useState<'note' | 'shipping' | 'coupon'>('note');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch cart from database if logged in
-        if (accessToken) {
-            fetchCart(accessToken);
-        }
+        const init = async () => {
+            // Fetch cart from database if logged in
+            if (accessToken) {
+                await fetchCart(accessToken);
+            }
+            setIsLoading(false);
+        };
+        init();
     }, [accessToken, fetchCart]);
 
     const handleQuantityChange = async (productId: string, newQuantity: number) => {
@@ -38,6 +44,10 @@ export default function CartPage() {
         }
         router.push('/checkout');
     };
+
+    if (isLoading) {
+        return <CartSkeleton />;
+    }
 
     if (items.length === 0) {
         return (

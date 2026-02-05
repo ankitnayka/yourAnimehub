@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Loader2, Plus, Shield, Check, X, Trash } from "lucide-react";
 import api from "@/lib/api";
+import TableSkeleton from "@/components/admin/TableSkeleton";
 
 export default function AdminManagementPage() {
     const { user, accessToken } = useAuthStore();
@@ -160,7 +161,7 @@ export default function AdminManagementPage() {
                     </thead>
                     <tbody className="divide-y divide-[#222]">
                         {loading ? (
-                            <tr><td colSpan={4} className="text-center py-4 text-white">Loading...</td></tr>
+                            <TableSkeleton rows={5} columns={4} />
                         ) : (
                             admins.map((admin) => (
                                 <tr key={admin._id} className="hover:bg-[#1a1a1a] transition-colors">
