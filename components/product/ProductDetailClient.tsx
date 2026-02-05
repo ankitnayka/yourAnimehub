@@ -18,7 +18,6 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({ slug }: ProductDetailClientProps) {
-    // const { slug } = use(params); // Removed, passed as prop
     const [product, setProduct] = useState<any>(null);
     const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -168,14 +167,14 @@ export default function ProductDetailClient({ slug }: ProductDetailClientProps) 
                         <div ref={thumbnailRef} className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:h-[600px] scrollbar-hide scroll-smooth">
                             {images.map((img: string, idx: number) => (
                                 <button key={idx} onClick={() => setActiveImage(idx)} className={`flex-shrink-0 w-20 h-24 md:w-24 md:h-32 border-2 ${activeImage === idx ? 'border-primary' : 'border-transparent'}`}>
-                                    <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                                    <img src={img} alt="Thumbnail" loading="lazy" className="w-full h-full object-cover" />
                                 </button>
                             ))}
                         </div>
                         <button onClick={() => scrollThumbnails('down')} className="hidden md:flex p-1 text-gray-400 hover:text-primary transition-colors"><ChevronDown size={24} /></button>
                     </div>
                     <div className="flex-1 order-1 md:order-2 h-[500px] md:h-[700px] overflow-hidden rounded-sm relative bg-secondary">
-                        {images[activeImage] && <img src={images[activeImage]} alt="Main" className="w-full h-full object-cover" />}
+                        {images[activeImage] && <img src={images[activeImage]} alt="Main" loading="lazy" className="w-full h-full object-cover" />}
                     </div>
                 </div>
 
@@ -304,7 +303,7 @@ export default function ProductDetailClient({ slug }: ProductDetailClientProps) 
                     {relatedProducts.length > 0 ? relatedProducts.map(rp => (
                         <Link href={`/product/${rp.slug}`} key={rp.id || rp._id} className="group cursor-pointer">
                             <div className="aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 relative">
-                                <img src={rp.image || rp.images?.[0]} alt={rp.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                <img src={rp.image || rp.images?.[0]} alt={rp.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             </div>
                             <h3 className="font-bold text-black dark:text-white text-sm uppercase mb-1 truncate">{rp.name}</h3>
                             <p className="text-primary font-bold">₹{rp.price}</p>

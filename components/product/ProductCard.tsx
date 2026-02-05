@@ -48,12 +48,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <img
                         src={product.image}
                         alt={product.name}
+                        loading="lazy"
                         className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out ${isHovered ? 'scale-110' : 'scale-100'}`}
                     />
                     {product.hoverImage && (
                         <img
                             src={product.hoverImage}
                             alt={product.name}
+                            loading="lazy"
                             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                         />
                     )}
