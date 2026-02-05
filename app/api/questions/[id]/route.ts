@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDB } from "@/lib/mongo"; // Wait, I should use dbConnect based on previous errors
+
 import dbConnect from "@/lib/dbConnect";
 import Question from "@/models/Question";
 

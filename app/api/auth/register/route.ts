@@ -7,7 +7,7 @@ import { z } from 'zod';
 const registerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    phone: z.string().optional(), // Optional phone
+    phone: z.string().min(10, "Phone number must be at least 10 characters"),
     password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -32,11 +32,10 @@ export async function POST(req: Request) {
         }
 
         // Check if user exists (phone) - only if phone is provided
-        if (phone) {
-            const existingUserPhone = await User.findOne({ phone });
-            if (existingUserPhone) {
-                return NextResponse.json({ error: 'User with this phone number already exists' }, { status: 400 });
-            }
+        // Check if user exists (phone)
+        const existingUserPhone = await User.findOne({ phone });
+        if (existingUserPhone) {
+            return NextResponse.json({ error: 'User with this phone number already exists' }, { status: 400 });
         }
 
         // Hash password
@@ -46,7 +45,7 @@ export async function POST(req: Request) {
         const user = await User.create({
             name,
             email,
-            phone: phone || undefined, // Store phone if present
+            phone,
             password: hashedPassword,
             provider: 'credentials',
         });

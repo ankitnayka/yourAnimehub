@@ -45,8 +45,8 @@ const UserSchema = new Schema({
     }],
     phone: {
         type: String,
+        required: [true, 'Please provide a phone number'],
         unique: true,
-        sparse: true, // Allow multiple users to have no phone number (null/undefined)
     },
     otp: {
         code: String,
