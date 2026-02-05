@@ -166,13 +166,13 @@ export const useCartStore = create<CartState>()(
                         discountPercentage: item.discountPercentage || 0,
                         quantity: item.quantity,
                         slug: item.slug,
-                        size: null,
-                        color: null
+                        size: item.size || null,
+                        color: item.color || null
                     }));
 
                     await api.put('/api/cart', { items: formattedItems });
-                } catch (error) {
-                    console.error("Cart sync failed", error);
+                } catch (error: any) {
+                    console.error("Cart sync failed:", error.message || "Network Error");
                 } finally {
                     set({ isSyncing: false });
                 }

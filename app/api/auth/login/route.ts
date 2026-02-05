@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
         // Save refresh token to DB
         user.refreshToken = refreshToken;
-        await user.save();
+        await user.save({ validateBeforeSave: false });
 
         // Set Refresh Token HttpOnly Cookie
         const cookieStore = await cookies();

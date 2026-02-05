@@ -115,34 +115,42 @@ export default function ProductCard({ product }: ProductCardProps) {
                             SOLD OUT
                         </button>
                     ) : (
-                        <button
-                            onClick={async (e) => {
-                                e.preventDefault(); // Prevent link navigation if inside a Link
-                                if (isInCart || isAdding) {
-                                    router.push('/cart');
-                                    return;
-                                }
+                        <div className="flex gap-2">
+                            <button
+                                onClick={async (e) => {
+                                    e.preventDefault();
+                                    if (isInCart || isAdding) {
+                                        router.push('/cart');
+                                        return;
+                                    }
 
-                                setIsAdding(true);
-                                await addItem(product, accessToken || undefined);
-                                setIsAdding(false);
-                            }}
-                            className={`w-full font-bold uppercase tracking-wider py-2.5 text-[11px] rounded-md transition-all duration-300 flex items-center justify-center gap-2
-                                ${isInCart
-                                    ? 'bg-green-600 text-white hover:bg-green-700'
-                                    : 'bg-gradient-to-r from-[#4A0E0E] to-[#B22222] text-white hover:from-[#3A0B0B] hover:to-[#8B1A1A] hover:shadow-lg'
-                                }`}
-                        >
-                            {isInCart ? (
-                                <>
-                                    <Check size={14} /> ADDED
-                                </>
-                            ) : (
-                                <>
-                                    {isAdding ? 'ADDING...' : 'ADD TO CART'}
-                                </>
-                            )}
-                        </button>
+                                    setIsAdding(true);
+                                    await addItem(product, accessToken || undefined);
+                                    setIsAdding(false);
+                                }}
+                                className={`flex-1 font-black uppercase tracking-wider py-2.5 text-[10px] rounded-md transition-all duration-300 flex items-center justify-center gap-1
+                                    ${isInCart
+                                        ? 'bg-green-600 text-white hover:bg-green-700'
+                                        : 'bg-black text-white hover:bg-gray-800'
+                                    }`}
+                            >
+                                {isInCart ? (
+                                    <> <Check size={12} /> ADDED </>
+                                ) : (
+                                    <> <ShoppingCart size={12} /> ADD </>
+                                )}
+                            </button>
+                            <button
+                                onClick={async (e) => {
+                                    e.preventDefault();
+                                    await addItem(product, accessToken || undefined);
+                                    router.push('/checkout');
+                                }}
+                                className="flex-1 bg-primary text-white font-black uppercase tracking-wider py-2.5 text-[10px] rounded-md hover:bg-red-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1"
+                            >
+                                BUY NOW
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

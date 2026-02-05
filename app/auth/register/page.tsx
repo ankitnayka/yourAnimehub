@@ -5,21 +5,55 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AuthLayout from '@/components/auth/AuthLayout';
 import axios from 'axios';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState(''); // Add phone state
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
+
+    const getPasswordStrength = (pass: string) => {
+        if (!pass) return { label: '', color: '' };
+        if (pass.length < 6) return { label: 'Very Weak (min 6 chars)', color: 'text-red-600' };
+
+        const hasLetter = /[a-zA-Z]/.test(pass);
+        const hasNumber = /[0-9]/.test(pass);
+        const hasSymbol = /[^a-zA-Z0-9]/.test(pass);
+
+        const filledConditions = [hasLetter, hasNumber, hasSymbol].filter(Boolean).length;
+
+        if (filledConditions === 3) return { label: 'Strong', color: 'text-green-500' };
+        if (filledConditions === 2) return { label: 'Weak', color: 'text-yellow-500' };
+        return { label: 'Poor', color: 'text-red-500' };
+    };
+
+    const passwordStrength = getPasswordStrength(password);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSymbol = /[^a-zA-Z0-9]/.test(password);
+
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters long');
+            setLoading(false);
+            return;
+        }
+
+        if (!hasLetter || !hasNumber || !hasSymbol) {
+            setError('Password must include at least one letter, one number, and one symbol');
+            setLoading(false);
+            return;
+        }
 
         try {
             await axios.post('/api/auth/register', { name, email, phone, password }); // Include phone
@@ -47,7 +81,7 @@ export default function RegisterPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
-                        placeholder="John Doe"
+                        placeholder="Mivaan Rathod"
                         required
                     />
                 </div>
@@ -59,33 +93,48 @@ export default function RegisterPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
-                        placeholder="name@example.com"
+                        placeholder="name@gmail.com"
                         required
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-neutral-400 mb-1">Phone Number (Optional)</label>
+                    <label className="block text-sm font-medium text-neutral-400 mb-1">Phone Number</label>
                     <input
                         type="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
                         placeholder="1234567890"
+                        required
                     />
                 </div>
 
-                <div>
+                <div className="relative">
                     <label className="block text-sm font-medium text-neutral-400 mb-1">Password</label>
                     <input
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-600 transition-colors pr-12"
                         placeholder="••••••••"
                         required
                         minLength={6}
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-[34px] text-neutral-500 hover:text-white transition-colors"
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                    {password && (
+                        <div className="mt-1 flex justify-end">
+                            <span className={`text-xs font-medium ${passwordStrength.color}`}>
+                                {passwordStrength.label}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <button

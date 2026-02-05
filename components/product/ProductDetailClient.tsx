@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, use, useEffect, useRef } from "react";
-import { Star, Minus, Plus, ShoppingCart, Check, Truck, Shield, RotateCcw, Shirt, Loader2, ChevronUp, ChevronDown, X, Copy, Share2, MessageCircle, Mail, Phone, User as UserIcon } from "lucide-react";
+import { Star, Minus, Plus, ShoppingCart, Check, Truck, Shield, RotateCcw, Shirt, Loader2, ChevronUp, ChevronDown, X, Copy, Share2, MessageCircle, Mail, Phone, User as UserIcon, Zap } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,7 @@ export default function ProductDetailClient({ slug }: ProductDetailClientProps) 
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
+    const [isBuying, setIsBuying] = useState(false);
     const [activeTab, setActiveTab] = useState<'description' | 'shipping'>('description');
     const [reviews, setReviews] = useState<Review[]>([]);
 
@@ -40,8 +41,11 @@ export default function ProductDetailClient({ slug }: ProductDetailClientProps) 
     const reviewsRef = useRef<HTMLDivElement>(null);
 
     const router = useRouter();
-    const { addItem } = useCartStore();
+    const { addItem, items } = useCartStore();
     const { accessToken } = useAuthStore();
+
+    // Check if current product is already in cart
+    const isInCart = product ? items.some((item) => item.id === (product.id || product._id) || item.slug === product.slug) : false;
 
     useEffect(() => {
         const fetchProductData = async () => {
@@ -217,11 +221,35 @@ export default function ProductDetailClient({ slug }: ProductDetailClientProps) 
                                 <span className="font-bold text-lg">{quantity}</span>
                                 <button onClick={() => setQuantity(quantity + 1)} className="hover:text-primary"><Plus size={18} /></button>
                             </div>
-                            <button onClick={handleAddToCart} disabled={isAdding} className={`flex-1 font-black uppercase tracking-widest h-14 transition-all flex items-center justify-center gap-2 text-lg ${isAdding ? 'bg-green-600 text-white' : 'bg-primary text-white hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black'}`}>
-                                {isAdding ? <><Check size={20} /> Added</> : <><ShoppingCart size={20} /> Add to Cart</>}
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={isAdding || isInCart}
+                                className={`flex-1 font-black uppercase tracking-widest h-14 transition-all flex items-center justify-center gap-2 text-sm md:text-base ${isAdding || isInCart
+                                    ? 'bg-green-600 text-white cursor-default'
+                                    : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-80'
+                                    }`}
+                            >
+                                {isAdding ? (
+                                    <><Loader2 className="animate-spin" size={18} /> Adding...</>
+                                ) : isInCart ? (
+                                    <><Check size={18} /> Added</>
+                                ) : (
+                                    <><ShoppingCart size={18} /> Add Cart</>
+                                )}
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setIsBuying(true);
+                                    await handleAddToCart();
+                                    router.push('/checkout');
+                                }}
+                                disabled={isBuying}
+                                className="flex-1 bg-primary text-white font-black uppercase tracking-widest h-14 transition-all flex items-center justify-center gap-2 text-sm md:text-base hover:bg-red-700"
+                            >
+                                {isBuying ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} />} Buy Now
                             </button>
                             {/* Wishlist Button - Fixed ID */}
-                            <WishlistButton productId={product.id || product._id} className="h-14 w-14 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded-none hover:border-primary hover:bg-primary/10 transition-colors" />
+                            <WishlistButton productId={product.id || product._id} className="h-14 w-14 flex-shrink-0 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded-none hover:border-primary hover:bg-primary/10 transition-colors" />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
