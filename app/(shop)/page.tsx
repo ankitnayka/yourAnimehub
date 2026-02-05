@@ -17,13 +17,11 @@ function HomeContent() {
   const selectedCategory = searchParams.get("category") || "All Products";
 
   const setSelectedCategory = (cat: string) => {
-    const params = new URLSearchParams(searchParams.toString());
     if (cat === "All Products") {
-      params.delete("category");
+      router.push('/products');
     } else {
-      params.set("category", cat);
+      router.push(`/products?category=${encodeURIComponent(cat)}`);
     }
-    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   useEffect(() => {

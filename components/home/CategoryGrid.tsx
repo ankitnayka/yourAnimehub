@@ -57,15 +57,9 @@ export default function CategoryGrid() {
                         <button
                             key={cat._id}
                             onClick={() => {
-                                const params = new URLSearchParams(searchParams.toString());
+                                const params = new URLSearchParams();
                                 params.set('category', cat.name);
-                                router.push(`?${params.toString()}`, { scroll: false });
-
-                                // Scroll to products section
-                                const productsSection = document.getElementById('products');
-                                if (productsSection) {
-                                    productsSection.scrollIntoView({ behavior: 'smooth' });
-                                }
+                                router.push(`/products?${params.toString()}`);
                             }}
                             className="group relative aspect-[3/4] overflow-hidden rounded-lg bg-neutral-900 border border-white/10 text-left"
                         >

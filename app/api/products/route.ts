@@ -34,8 +34,14 @@ export async function GET(request: Request) {
         const featured = searchParams.get('featured');
         const newArrival = searchParams.get('new');
         const sort = searchParams.get('sort');
+        const search = searchParams.get('search'); // Add search param
 
         let query: any = {};
+
+        // Search Filter
+        if (search) {
+            query.name = { $regex: search, $options: 'i' }; // Case-insensitive search on name
+        }
 
         // Category Filter
         if (category && category !== 'All Products') {

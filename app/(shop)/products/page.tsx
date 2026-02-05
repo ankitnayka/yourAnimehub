@@ -120,7 +120,7 @@ function ProductsContent() {
                             <select
                                 value={sort}
                                 onChange={handleSortChange}
-                                className="bg-transparent border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm font-bold focus:outline-none"
+                                className="bg-white dark:bg-neutral-900 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm font-bold focus:outline-none text-black dark:text-white"
                             >
                                 <option value="newest">Newest</option>
                                 <option value="price_asc">Price Low to High</option>
